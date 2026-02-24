@@ -7,7 +7,7 @@ class DbHelper {
 
   static Future<Database> get database async {
     if (_db != null) return _db!;
-    _db = await _initDatabase(); 
+    _db = await _initDatabase();
     return _db!;
   }
 
@@ -16,10 +16,15 @@ class DbHelper {
     var databaseFactory = databaseFactoryFfi;
 
     String userPath = Platform.environment['USERPROFILE'] ?? '';
-    String oneDrivePath = join(userPath, 'OneDrive', 'Documentos', 'ClinicaDados');
+    String oneDrivePath = join(
+      userPath,
+      'OneDrive',
+      'Documentos',
+      'ClinicaDados',
+    );
 
     Directory(oneDrivePath).createSync(recursive: true);
-    
+
     String path = join(oneDrivePath, 'clinica_sucesso.db');
 
     return await databaseFactory.openDatabase(
@@ -58,12 +63,30 @@ class DbHelper {
   }
 
   static Future<int> inserirPaciente(Map<String, dynamic> dados) async {
-    final db = await database; 
+    final db = await database;
     return await db.insert('pacientes', dados);
   }
 
   static Future<int> inserirAvaliacao(Map<String, dynamic> dados) async {
     final db = await database;
     return await db.insert('avaliacoes', dados);
+  }
+
+  static Future<List<Map<String, dynamic>>> buscarResumoPaciente() async {
+    final db = await database;
+    return await db.rawQuery('''
+      SELECT
+        p.id,
+        p.nome,
+        p.data_avaliacao,
+        a.fechou_pacote,
+        a.profissional,
+        a.especialidade,
+        a.valor,
+        a.observacoes
+      FROM pacientes p
+      LEFT JOIN avaliacoes a ON p.id = a.paciente_id
+      ORDER BY p.id DESC
+    ''');
   }
 }

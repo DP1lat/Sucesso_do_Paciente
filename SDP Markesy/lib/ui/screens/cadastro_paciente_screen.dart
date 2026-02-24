@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/data/models/paciente_model.dart';
+import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'avaliacao_sucesso_screen.dart';
 
 class CadastroPacienteScreen extends StatefulWidget {
@@ -31,6 +32,14 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
+
+            IconButton(
+              icon: const Icon(Icons.history),
+              onPressed: () => Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())
+              ),
+            ),
 
             TextField(
               controller: _nomeController,
