@@ -1,0 +1,13 @@
+name: sdp_markesy
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite_common_ffi: ^2.3.0  # SQLite para Desktop
+  path_provider: ^2.1.2       # Localizar pastas do sistema
+  path: ^1.9.0                # Manipular caminhos de arquivos
+  provider: ^6.1.1            # Gerenciamento de estado e permissões
+  intl: ^0.19.0               # Formatação de datas e moedas
+
+environment:
+  sdk: '^3.11.0'
