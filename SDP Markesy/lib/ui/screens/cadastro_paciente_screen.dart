@@ -6,7 +6,9 @@ import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'avaliacao_sucesso_screen.dart';
 
 class CadastroPacienteScreen extends StatefulWidget {
-  const CadastroPacienteScreen({super.key});
+  final Map<String, dynamic>? pacienteParaEditar;
+
+  const CadastroPacienteScreen({super.key, this.pacienteParaEditar});
 
   @override
   State<CadastroPacienteScreen> createState() => _CadastroPacienteScreenState();
@@ -19,9 +21,27 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   DateTime _dataSelecionada = DateTime.now();
 
   @override
+  void initState() {
+    super.initState();
+    // Preenche os campos se for edição
+    if (widget.pacienteParaEditar != null) {
+      _nomeController.text = widget.pacienteParaEditar!['nome'] ?? '';
+      _anoController.text = widget.pacienteParaEditar!['ano_nascimento']?.toString() ?? '';
+      _telefoneController.text = widget.pacienteParaEditar!['telefone'] ?? '';
+      
+      // Correção do nome da chave para bater com o banco (sem acento)
+      if (widget.pacienteParaEditar!['data_avaliacao'] != null) {
+        _dataSelecionada = DateTime.parse(widget.pacienteParaEditar!['data_avaliacao']);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    bool isEditing = widget.pacienteParaEditar != null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Novo Cadastro de Paciente')),
+      appBar: AppBar(title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -32,21 +52,10 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
-            IconButton(
-              icon: const Icon(Icons.history),
-              onPressed: () => Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())
-              ),
-            ),
-
+            
             TextField(
               controller: _nomeController,
-              decoration: const InputDecoration(
-                labelText: 'Nome Completo',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Nome Completo', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
 
@@ -56,21 +65,14 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                   child: TextField(
                     controller: _anoController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Ano de Nascimento',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Ano de Nascimento', border: OutlineInputBorder()),
                   ),
                 ),
                 const SizedBox(width: 16),
-
                 Expanded(
                   child: TextField(
                     controller: _telefoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Telefone/WhatsApp',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Telefone/WhatsApp', border: OutlineInputBorder()),
                   ),
                 ),
               ],
@@ -93,34 +95,63 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
             ),
 
             const Spacer(),
+
             ElevatedButton(
               onPressed: () async {
-                final novoPaciente = Paciente(
-                  nome: _nomeController.text,
-                  anoNascimento: int.tryParse(_anoController.text) ?? 0,
-                  telefone: _telefoneController.text,
-                  dataAvaliacao: _dataSelecionada,
-                );
+                final dadosPaciente = {
+                  'nome': _nomeController.text, // Corrigido de '=' para ':'
+                  'ano_nascimento': int.tryParse(_anoController.text) ?? 0,
+                  'telefone': _telefoneController.text,
+                  'data_avaliacao': _dataSelecionada.toIso8601String(),
+                };
 
-                final idGerado = await DbHelper.inserirPaciente(novoPaciente.toMap());
+                int idFinal;
 
-                if(mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Paciente salvo com sucesso!')),
-                  );
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AvaliacaoSucessoScreen(pacienteId: idGerado)),
-                  );
+                if (isEditing) {
+                  // Apenas atualiza e volta
+                  await DbHelper.atualizarPaciente(widget.pacienteParaEditar!['id'], dadosPaciente);
+                  idFinal = widget.pacienteParaEditar!['id'];
+                } else {
+                  // Insere novo e guarda o ID para a próxima tela
+                  idFinal = await DbHelper.inserirPaciente(dadosPaciente);
                 }
-                print('Paciente $idGerado salvo: ${_nomeController.text}');
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isEditing ? 'Alterações salvas!' : 'Paciente cadastrado!')),
+                  );
+
+                  if (isEditing) {
+                    Navigator.pop(context); // Se editou, volta para o histórico
+                  } else {
+                    // Se é novo, vai para a avaliação financeira
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AvaliacaoSucessoScreen(pacienteId: idFinal)),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 55),
+                backgroundColor: Colors.blue[700],
+                foregroundColor: Colors.white,
               ),
-              child: const Text('Prosseguir para Avaliação de Sucesso'),
+              child: Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO'),
             ),
+            
+            if (!isEditing) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())),
+                icon: const Icon(Icons.analytics_outlined),
+                label: const Text('VER HISTÓRICO'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  side: BorderSide(color: Colors.blue[700]!, width: 2),
+                ),
+              ),
+            ]
           ],
         ),
       ),

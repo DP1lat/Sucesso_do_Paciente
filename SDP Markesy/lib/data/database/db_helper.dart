@@ -89,4 +89,17 @@ class DbHelper {
       ORDER BY p.id DESC
     ''');
   }
+
+  static Future<void> excluirPaciente(int id) async {
+    final db = await database;
+    await db.delete('pacientes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<void> atualizarPaciente(
+    int id,
+    Map<String, dynamic> dados,
+  ) async {
+    final db = await database;
+    await db.update('pacientes', dados, where: 'id = ?', whereArgs: [id]);
+  }
 }
