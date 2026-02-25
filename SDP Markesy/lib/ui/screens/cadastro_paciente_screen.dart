@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
-import 'package:sdp_markesy/data/models/paciente_model.dart';
+// import 'package:sdp_markesy/data/models/paciente_model.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'avaliacao_sucesso_screen.dart';
 
@@ -23,15 +23,16 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   @override
   void initState() {
     super.initState();
-    // Preenche os campos se for edição
     if (widget.pacienteParaEditar != null) {
       _nomeController.text = widget.pacienteParaEditar!['nome'] ?? '';
-      _anoController.text = widget.pacienteParaEditar!['ano_nascimento']?.toString() ?? '';
+      _anoController.text =
+          widget.pacienteParaEditar!['ano_nascimento']?.toString() ?? '';
       _telefoneController.text = widget.pacienteParaEditar!['telefone'] ?? '';
-      
-      // Correção do nome da chave para bater com o banco (sem acento)
+
       if (widget.pacienteParaEditar!['data_avaliacao'] != null) {
-        _dataSelecionada = DateTime.parse(widget.pacienteParaEditar!['data_avaliacao']);
+        _dataSelecionada = DateTime.parse(
+          widget.pacienteParaEditar!['data_avaliacao'],
+        );
       }
     }
   }
@@ -41,7 +42,9 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
     bool isEditing = widget.pacienteParaEditar != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -52,10 +55,13 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            
+
             TextField(
               controller: _nomeController,
-              decoration: const InputDecoration(labelText: 'Nome Completo', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Nome Completo',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -65,14 +71,20 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                   child: TextField(
                     controller: _anoController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Ano de Nascimento', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Ano de Nascimento',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _telefoneController,
-                    decoration: const InputDecoration(labelText: 'Telefone/WhatsApp', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Telefone/WhatsApp',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
               ],
@@ -99,51 +111,92 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
             ElevatedButton(
               onPressed: () async {
                 final dadosPaciente = {
-                  'nome': _nomeController.text, // Corrigido de '=' para ':'
+                  'nome': _nomeController.text,
                   'ano_nascimento': int.tryParse(_anoController.text) ?? 0,
                   'telefone': _telefoneController.text,
                   'data_avaliacao': _dataSelecionada.toIso8601String(),
                 };
 
-                int idFinal;
-
                 if (isEditing) {
-                  // Apenas atualiza e volta
-                  await DbHelper.atualizarPaciente(widget.pacienteParaEditar!['id'], dadosPaciente);
-                  idFinal = widget.pacienteParaEditar!['id'];
-                } else {
-                  // Insere novo e guarda o ID para a próxima tela
-                  idFinal = await DbHelper.inserirPaciente(dadosPaciente);
-                }
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isEditing ? 'Alterações salvas!' : 'Paciente cadastrado!')),
+                  await DbHelper.atualizarPaciente(
+                    widget.pacienteParaEditar!['id'],
+                    dadosPaciente,
                   );
+                  if (mounted) {
+                    bool? editarFinanceiro = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Dados Básicos Salvos'),
+                        content: const Text(
+                          'Deseja editar também os valores e detalhes da avaliação?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Não'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Sim, Editar Tudo'),
+                          ),
+                        ],
+                      ),
+                    );
 
-                  if (isEditing) {
-                    Navigator.pop(context); // Se editou, volta para o histórico
-                  } else {
-                    // Se é novo, vai para a avaliação financeira
+                    if (mounted) {
+                      if (editarFinanceiro == true) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AvaliacaoSucessoScreen(
+                              pacienteId: widget.pacienteParaEditar!['id'],
+                              dadosAntigos: widget.pacienteParaEditar,
+                            ),
+                          ),
+                        );
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    }
+                  }
+                } else {
+                  final idNovo = await DbHelper.inserirPaciente(dadosPaciente);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Paciente Cadastrado')),
+                    );
+
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AvaliacaoSucessoScreen(pacienteId: idFinal)),
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AvaliacaoSucessoScreen(pacienteId: idNovo),
+                      ),
                     );
                   }
                 }
+
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 55),
                 backgroundColor: Colors.blue[700],
                 foregroundColor: Colors.white,
               ),
-              child: Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO'),
+              child: Text(
+                isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO',
+              ),
             ),
-            
+
             if (!isEditing) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const HistoricoPacienteScreen(),
+                  ),
+                ),
                 icon: const Icon(Icons.analytics_outlined),
                 label: const Text('VER HISTÓRICO'),
                 style: OutlinedButton.styleFrom(
@@ -151,7 +204,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                   side: BorderSide(color: Colors.blue[700]!, width: 2),
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ),

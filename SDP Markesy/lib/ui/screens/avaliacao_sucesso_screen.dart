@@ -3,8 +3,13 @@ import 'package:sdp_markesy/data/database/db_helper.dart';
 
 class AvaliacaoSucessoScreen extends StatefulWidget {
   final int pacienteId;
+  final Map<String, dynamic>? dadosAntigos;
 
-  const AvaliacaoSucessoScreen({super.key, required this.pacienteId});
+  const AvaliacaoSucessoScreen({
+    super.key,
+    required this.pacienteId,
+    this.dadosAntigos,
+  });
 
   @override
   State<AvaliacaoSucessoScreen> createState() => _AvaliacaoSucessoScreenState();
@@ -15,15 +20,44 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
   String _especialidade = 'Fisioterapia';
   String _formaPagamento = 'À vista';
   String _tipoPagamento = 'Crédito';
-  final _profissionalController = TextEditingController();
-  final _obsController = TextEditingController();
-  final _valorController = TextEditingController();
-  final _sessoesController = TextEditingController();
+
+  late TextEditingController _profissionalController;
+  late TextEditingController _obsController;
+  late TextEditingController _valorController;
+  late TextEditingController _sessoesController;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _profissionalController = TextEditingController(text: widget.dadosAntigos?['profissional'] ?? '');
+    _obsController = TextEditingController(text: widget.dadosAntigos?['observacoes'] ?? '');
+    _valorController = TextEditingController(text: widget.dadosAntigos?['valor']?.toString() ?? '');
+    _sessoesController = TextEditingController(text: widget.dadosAntigos?['num_sessoes']?.toString() ?? '');
+
+    if (widget.dadosAntigos != null) {
+      _fechouPacote = widget.dadosAntigos!['fechou_pacote'] == 1;
+      _especialidade = widget.dadosAntigos!['especialidade'] ?? 'Fisioterapia';
+      _formaPagamento = widget.dadosAntigos!['forma_pagamento'] ?? 'À vista';
+      _tipoPagamento = widget.dadosAntigos!['tipo_pagamento'] ?? 'Crédito';
+    }
+  }
+
+  @override
+  void dispose() {
+    _profissionalController.dispose();
+    _obsController.dispose();
+    _valorController.dispose();
+    _sessoesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    bool isEditing = widget.dadosAntigos != null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Avaliação de Sucesso')),
+      appBar: AppBar(title: Text(isEditing ? 'Editar Avaliação' : 'Avaliação de Sucesso')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -36,9 +70,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
             const SizedBox(height: 10),
 
             SwitchListTile(
-              title: Text(
-                _fechouPacote ? 'Sim, pacote fechado!' : 'Não fechou ainda',
-              ),
+              title: Text(_fechouPacote ? 'Sim, pacote fechado!' : 'Não fechou ainda'),
               value: _fechouPacote,
               activeThumbColor: Colors.green,
               onChanged: (value) => setState(() => _fechouPacote = value),
@@ -47,7 +79,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
             if (_fechouPacote) ...[
               const Divider(height: 40),
               DropdownButtonFormField<String>(
-                initialValue: _especialidade,
+                value: _especialidade,
                 decoration: const InputDecoration(labelText: 'Especialidade'),
                 items: ['Fisioterapia', 'Nutrição', 'Psicologia'].map((e) {
                   return DropdownMenuItem(value: e, child: Text(e));
@@ -62,10 +94,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                     child: TextField(
                       controller: _sessoesController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Nº de sessões',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Nº de sessões', border: OutlineInputBorder()),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -73,10 +102,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                     child: TextField(
                       controller: _valorController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Valor total (R\$)',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Valor total (R\$)', border: OutlineInputBorder()),
                     ),
                   ),
                 ],
@@ -85,15 +111,12 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
               TextField(
                 controller: _profissionalController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do Profissional',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Nome do Profissional', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                initialValue: _tipoPagamento,
+                value: _tipoPagamento,
                 decoration: const InputDecoration(labelText: 'Tipo de Pagamento'),
                 items: ['Dinheiro', 'Crédito', 'Débito', 'Pix'].map((e) {
                   return DropdownMenuItem(value: e, child: Text(e));
@@ -105,28 +128,23 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               TextField(
                 controller: _obsController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Observações Adicionais',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Observações Adicionais', border: OutlineInputBorder()),
               ),
 
+              const SizedBox(height: 16),
               const Text('Forma de Pagamento:'),
-
               Row(
                 children: [
                   Radio<String>(
                     value: 'À vista',
                     groupValue: _formaPagamento,
-                    onChanged: (value) =>
-                        setState(() => _formaPagamento = value!),
+                    onChanged: (value) => setState(() => _formaPagamento = value!),
                   ),
                   const Text('À vista'),
                   Radio<String>(
                     value: 'Parcelado',
                     groupValue: _formaPagamento,
-                    onChanged: (value) =>
-                        setState(() => _formaPagamento = value!),
+                    onChanged: (value) => setState(() => _formaPagamento = value!),
                   ),
                   const Text('Parcelado'),
                 ],
@@ -149,21 +167,24 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                   'observacoes': _obsController.text,
                 };
 
-                await DbHelper.inserirAvaliacao(novaAvaliacao);
+                if (isEditing) {
+                  // Lógica de Atualização
+                  await DbHelper.atualizarAvaliacao(widget.pacienteId, novaAvaliacao);
+                } else {
+                  // Lógica de Inserção
+                  await DbHelper.inserirAvaliacao(novaAvaliacao);
+                }
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Dados de sucesso registrados!'),
-                    ),
+                    SnackBar(content: Text(isEditing ? 'Avaliação atualizada!' : 'Dados registrados!')),
                   );
-                  Navigator.pop(context);
+                  // Volta para o histórico
+                  Navigator.popUntil(context, (route) => route.isFirst); 
                 }
               },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text('Finalizar e Sincronizar'),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+              child: Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'FINALIZAR E SINCRONIZAR'),
             ),
           ],
         ),

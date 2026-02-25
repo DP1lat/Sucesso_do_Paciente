@@ -99,19 +99,47 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Divider(),
-                          Text(
-                            'Profissional: ${item['profissional'] ?? 'N/A'}',
+                          _buildInfoRow(
+                            Icons.phone,
+                            'Telefone',
+                            item['telefone'],
+                          ),
+                          _buildInfoRow(
+                            Icons.cake,
+                            'Ano Nascimento',
+                            item['ano_nascimento'],
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildInfoRow(
+                            Icons.person,
+                            'Profissional',
+                            item['profissional'],
+                          ),
+                          _buildInfoRow(
+                            Icons.medical_services,
+                            'Especialidade',
+                            item['especialidade'],
+                          ),
+                          _buildInfoRow(
+                            Icons.payments,
+                            'Valor',
+                            'R\$ ${item['valor']?.toStringAsFixed(2) ?? '0.00'}',
+                          ),
+
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Observações',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
                           Text(
-                            'Especialidade: ${item['especialidade'] ?? 'N/A'}',
+                            item['observacoes'] ?? 'Nenhuma observação.',
+                            style: const TextStyle(fontStyle: FontStyle.italic),
                           ),
-                          Text(
-                            'Valor: R\$ ${item['valor']?.toStringAsFixed(2) ?? '0.00'}',
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Observações: ${item['observacoes'] ?? 'Nenhuma'}',
-                          ),
+
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -167,6 +195,20 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.blueGrey),
+          const SizedBox(width: 10),
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(value?.toString() ?? 'N/A'),
+        ],
       ),
     );
   }

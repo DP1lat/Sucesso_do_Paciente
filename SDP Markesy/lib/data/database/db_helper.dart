@@ -79,6 +79,8 @@ class DbHelper {
         p.id,
         p.nome,
         p.data_avaliacao,
+        p.ano_nascimento,
+        p.telefone,
         a.fechou_pacote,
         a.profissional,
         a.especialidade,
@@ -101,5 +103,18 @@ class DbHelper {
   ) async {
     final db = await database;
     await db.update('pacientes', dados, where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<void> atualizarAvaliacao(
+    int pacienteId,
+    Map<String, dynamic> dados,
+  ) async {
+    final db = await database;
+    await db.update(
+      'avaliacoes',
+      dados,
+      where: 'paciente_id = ?',
+      whereArgs: [pacienteId],
+    );
   }
 }
