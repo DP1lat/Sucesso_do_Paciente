@@ -16,12 +16,7 @@ class DbHelper {
     var databaseFactory = databaseFactoryFfi;
 
     String userPath = Platform.environment['USERPROFILE'] ?? '';
-    String oneDrivePath = join(
-      userPath,
-      'OneDrive',
-      'Documentos',
-      'ClinicaDados',
-    );
+    String oneDrivePath = join(userPath, 'OneDrive', 'Documentos', 'ClinicaDados');
 
     Directory(oneDrivePath).createSync(recursive: true);
 
@@ -72,24 +67,23 @@ class DbHelper {
     return await db.insert('avaliacoes', dados);
   }
 
-  static Future<List<Map<String, dynamic>>> buscarResumoPaciente() async {
+  static Future<List<Map<String, dynamic>>> buscarResumoPaciente(String ordem, {String filtro = ''}) async {
     final db = await database;
-    return await db.rawQuery('''
-      SELECT
-        p.id,
-        p.nome,
-        p.data_avaliacao,
-        p.ano_nascimento,
-        p.telefone,
-        a.fechou_pacote,
-        a.profissional,
-        a.especialidade,
-        a.valor,
-        a.observacoes
+    String ordemCorrigida = ordem.contains('id') && !ordem.contains('p.') ? ordem.replaceAll('id', 'p.id') : ordem;
+
+    String query =
+        '''
+      SELECT 
+        p.id, p.nome, p.data_avaliacao, p.ano_nascimento, p.telefone,
+        a.fechou_pacote, a.profissional, a.especialidade, a.valor,
+        a.tipo_pagamento, a.forma_pagamento, a.num_sessoes, a.observacoes
       FROM pacientes p
       LEFT JOIN avaliacoes a ON p.id = a.paciente_id
-      ORDER BY p.id DESC
-    ''');
+      WHERE p.nome LIKE ?
+      ORDER BY $ordemCorrigida
+    ''';
+
+    return await db.rawQuery(query, ['%$filtro%']);
   }
 
   static Future<void> excluirPaciente(int id) async {
@@ -97,24 +91,13 @@ class DbHelper {
     await db.delete('pacientes', where: 'id = ?', whereArgs: [id]);
   }
 
-  static Future<void> atualizarPaciente(
-    int id,
-    Map<String, dynamic> dados,
-  ) async {
+  static Future<void> atualizarPaciente(int id, Map<String, dynamic> dados) async {
     final db = await database;
     await db.update('pacientes', dados, where: 'id = ?', whereArgs: [id]);
   }
 
-  static Future<void> atualizarAvaliacao(
-    int pacienteId,
-    Map<String, dynamic> dados,
-  ) async {
+  static Future<void> atualizarAvaliacao(int pacienteId, Map<String, dynamic> dados) async {
     final db = await database;
-    await db.update(
-      'avaliacoes',
-      dados,
-      where: 'paciente_id = ?',
-      whereArgs: [pacienteId],
-    );
+    await db.update('avaliacoes', dados, where: 'paciente_id = ?', whereArgs: [pacienteId]);
   }
 }
