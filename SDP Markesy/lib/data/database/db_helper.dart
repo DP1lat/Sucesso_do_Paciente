@@ -45,6 +45,7 @@ class DbHelper {
               especialidade TEXT,
               num_sessoes INTEGER,
               forma_pagamento TEXT,
+              num_parcelas INTEGER,
               tipo_pagamento TEXT,
               valor REAL,
               data_avaliacao TEXT,
@@ -76,7 +77,7 @@ class DbHelper {
       SELECT 
         p.id, p.nome, p.data_avaliacao, p.data_nascimento, p.telefone,
         a.fechou_pacote, a.profissional, a.especialidade, a.valor,
-        a.tipo_pagamento, a.forma_pagamento, a.num_sessoes, a.observacoes
+        a.tipo_pagamento, a.forma_pagamento, a.num_parcelas, a.num_sessoes, a.observacoes
       FROM pacientes p
       LEFT JOIN avaliacoes a ON p.id = a.paciente_id
       WHERE p.nome LIKE ?

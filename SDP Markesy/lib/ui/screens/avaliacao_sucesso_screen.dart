@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class AvaliacaoSucessoScreen extends StatefulWidget {
   final int pacienteId;
   final Map<String, dynamic>? dadosAntigos;
 
-  const AvaliacaoSucessoScreen({
-    super.key,
-    required this.pacienteId,
-    this.dadosAntigos,
-  });
+  const AvaliacaoSucessoScreen({super.key, required this.pacienteId, this.dadosAntigos});
 
   @override
   State<AvaliacaoSucessoScreen> createState() => _AvaliacaoSucessoScreenState();
+}
+
+class MoedaInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.selection.baseOffset == 0) return newValue;
+
+    String onlyDigits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    double value = double.parse(onlyDigits);
+
+    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: '');
+    String newText = formatter.format(value / 100).trim();
+
+    return newValue.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
 }
 
 class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
@@ -24,22 +40,30 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
   late TextEditingController _profissionalController;
   late TextEditingController _obsController;
   late TextEditingController _valorController;
-  late TextEditingController _sessoesController;
+
+  int _sessoesSelecionada = 1;
+  int _parcelasSelecionada = 2;
+  final List<int> _opcoesParcelas = List.generate(11, (index) => index + 2);
 
   @override
   void initState() {
     super.initState();
-    
+
     _profissionalController = TextEditingController(text: widget.dadosAntigos?['profissional'] ?? '');
     _obsController = TextEditingController(text: widget.dadosAntigos?['observacoes'] ?? '');
-    _valorController = TextEditingController(text: widget.dadosAntigos?['valor']?.toString() ?? '');
-    _sessoesController = TextEditingController(text: widget.dadosAntigos?['num_sessoes']?.toString() ?? '');
+
+    double valorInicial = widget.dadosAntigos?['valor'] ?? 0.0;
+    _valorController = TextEditingController(
+      text: NumberFormat.currency(locale: 'pt_BR', symbol: '').format(valorInicial).trim(),
+    );
 
     if (widget.dadosAntigos != null) {
       _fechouPacote = widget.dadosAntigos!['fechou_pacote'] == 1;
       _especialidade = widget.dadosAntigos!['especialidade'] ?? 'Fisioterapia';
       _formaPagamento = widget.dadosAntigos!['forma_pagamento'] ?? 'À vista';
       _tipoPagamento = widget.dadosAntigos!['tipo_pagamento'] ?? 'Crédito';
+      _sessoesSelecionada = widget.dadosAntigos!['num_sessoes'] ?? 1;
+      _parcelasSelecionada = widget.dadosAntigos!['num_parcelas'] ?? 2;
     }
   }
 
@@ -48,7 +72,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
     _profissionalController.dispose();
     _obsController.dispose();
     _valorController.dispose();
-    _sessoesController.dispose();
+    // _sessoesController.dispose();
     super.dispose();
   }
 
@@ -63,10 +87,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'O Paciente fechou o Tratamento?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            const Text('O Paciente fechou o Tratamento?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
 
             SwitchListTile(
@@ -91,17 +112,22 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _sessoesController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Nº de sessões', border: OutlineInputBorder()),
+                    child: DropdownButtonFormField<int>(
+                      initialValue: _sessoesSelecionada,
+                      decoration: const InputDecoration(labelText: 'Nº de sessões'),
+                      items: List.generate(10, (i) => i + 1).map((e) {
+                        return DropdownMenuItem(value: e, child: Text('$e sessões'));
+                      }).toList(),
+                      onChanged: (value) => setState(() => _sessoesSelecionada = value!),
                     ),
                   ),
                   const SizedBox(width: 16),
+
                   Expanded(
                     child: TextField(
                       controller: _valorController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, MoedaInputFormatter()],
                       decoration: const InputDecoration(labelText: 'Valor total (R\$)', border: OutlineInputBorder()),
                     ),
                   ),
@@ -125,44 +151,65 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               ),
               const SizedBox(height: 16),
 
+              const Text('Forma de Pagamento:'),
+              Row(
+                children: [
+                  Radio<String>(value: 'À vista', 
+                  groupValue: _formaPagamento, 
+                  onChanged: (value) => setState(() => _formaPagamento = value!)
+                  ),
+                  const Text('À vista'),
+                  Radio<String>(value: 'Parcelado', 
+                  groupValue: _formaPagamento, 
+                  onChanged: (value) => setState(() => _formaPagamento = value!)
+                  ),
+                  const Text('Parcelado'),
+                ],
+              ),
+
+              if (_formaPagamento == 'Parcelado') ... [
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  initialValue: _parcelasSelecionada,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade de parcelas ',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.credit_card),
+                  ),
+                  items: _opcoesParcelas.map((int value) {
+                    return DropdownMenuItem<int>(
+                      value: value,
+                      child: Text('Parcelado em $value vezes'),
+                    );
+                  }).toList(),
+                  onChanged: (novoValor) => setState(() => _parcelasSelecionada = novoValor!),
+                )
+              ],
+              const SizedBox(height: 16),
+
               TextField(
                 controller: _obsController,
                 maxLines: 3,
                 decoration: const InputDecoration(labelText: 'Observações Adicionais', border: OutlineInputBorder()),
-              ),
-
-              const SizedBox(height: 16),
-              const Text('Forma de Pagamento:'),
-              Row(
-                children: [
-                  Radio<String>(
-                    value: 'À vista',
-                    groupValue: _formaPagamento,
-                    onChanged: (value) => setState(() => _formaPagamento = value!),
-                  ),
-                  const Text('À vista'),
-                  Radio<String>(
-                    value: 'Parcelado',
-                    groupValue: _formaPagamento,
-                    onChanged: (value) => setState(() => _formaPagamento = value!),
-                  ),
-                  const Text('Parcelado'),
-                ],
               ),
             ],
 
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () async {
+                String valorLimpo = _valorController.text.replaceAll('.', '').replaceAll(',', '.');
+                double valorFinal = double.tryParse(valorLimpo) ?? 0.0;
+
                 final novaAvaliacao = {
                   'paciente_id': widget.pacienteId,
                   'fechou_pacote': _fechouPacote ? 1 : 0,
                   'profissional': _profissionalController.text,
                   'especialidade': _especialidade,
-                  'num_sessoes': int.tryParse(_sessoesController.text) ?? 0,
+                  'num_sessoes': _sessoesSelecionada,
                   'forma_pagamento': _formaPagamento,
+                  'num_parcelas': _formaPagamento == 'Parcelado' ? _parcelasSelecionada : 1,
                   'tipo_pagamento': _tipoPagamento,
-                  'valor': double.tryParse(_valorController.text) ?? 0.0,
+                  'valor': valorFinal,
                   'data_avaliacao': DateTime.now().toIso8601String(),
                   'observacoes': _obsController.text,
                 };
@@ -176,11 +223,9 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                 }
 
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isEditing ? 'Avaliação atualizada!' : 'Dados registrados!')),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isEditing ? 'Avaliação atualizada!' : 'Dados registrados!')));
                   // Volta para o histórico
-                  Navigator.popUntil(context, (route) => route.isFirst); 
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 }
               },
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
