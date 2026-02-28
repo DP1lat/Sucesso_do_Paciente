@@ -8,6 +8,7 @@ dependencies:
   path: ^1.9.0                # Manipular caminhos de arquivos
   provider: ^6.1.1            # Gerenciamento de estado e permissões
   intl: ^0.19.0               # Formatação de datas e moedas
+  mask_text_input_formatter: ^2.9.0
 
 environment:
   sdk: '^3.11.0'

@@ -4,6 +4,7 @@ import 'package:sdp_markesy/data/database/db_helper.dart';
 // import 'package:sdp_markesy/data/models/paciente_model.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'avaliacao_sucesso_screen.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class CadastroPacienteScreen extends StatefulWidget {
   final Map<String, dynamic>? pacienteParaEditar;
@@ -16,23 +17,29 @@ class CadastroPacienteScreen extends StatefulWidget {
 
 class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   final _nomeController = TextEditingController();
-  final _anoController = TextEditingController();
+  final _nascimentoController = TextEditingController();
   final _telefoneController = TextEditingController();
+  final _maskTelefone = MaskTextInputFormatter(mask: '(##) #####-####', filter: {'#': RegExp(r'[0-9]')});
   DateTime _dataSelecionada = DateTime.now();
+  DateTime? _dataNascimentoSelecionada;
 
   @override
   void initState() {
     super.initState();
     if (widget.pacienteParaEditar != null) {
       _nomeController.text = widget.pacienteParaEditar!['nome'] ?? '';
-      _anoController.text =
-          widget.pacienteParaEditar!['ano_nascimento']?.toString() ?? '';
       _telefoneController.text = widget.pacienteParaEditar!['telefone'] ?? '';
 
-      if (widget.pacienteParaEditar!['data_avaliacao'] != null) {
-        _dataSelecionada = DateTime.parse(
-          widget.pacienteParaEditar!['data_avaliacao'],
-        );
+      String? dataSalva = widget.pacienteParaEditar!['data_nascimento'];
+
+      if (dataSalva != null && dataSalva.isNotEmpty) {
+        _nascimentoController.text = dataSalva;
+
+        try {
+          _dataNascimentoSelecionada = DateFormat('dd/MM/yyyy').parse(dataSalva);
+        } catch (e) {
+          _dataNascimentoSelecionada = DateTime(2000);
+        }
       }
     }
   }
@@ -42,26 +49,18 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
     bool isEditing = widget.pacienteParaEditar != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro'),
-      ),
+      appBar: AppBar(title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Informações do Paciente',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text('Informações do Paciente', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
 
             TextField(
               controller: _nomeController,
-              decoration: const InputDecoration(
-                labelText: 'Nome Completo',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Nome Completo', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
 
@@ -69,22 +68,27 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _anoController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Ano de Nascimento',
-                      border: OutlineInputBorder(),
-                    ),
+                    controller: _nascimentoController,
+                    readOnly: true,
+                    decoration: const InputDecoration(labelText: 'Data de Nascimento', border: OutlineInputBorder(), prefixIcon: Icon(Icons.cake)),
+                    onTap: () async {
+                      DateTime? picked = await showDatePicker(context: context, initialDate: _dataNascimentoSelecionada ?? DateTime(2000), firstDate: DateTime(1920), lastDate: DateTime.now());
+                      if (picked != null) {
+                        setState(() {
+                          _dataNascimentoSelecionada = picked;
+                          _nascimentoController.text = DateFormat('dd/MM/yyyy').format(picked);
+                        });
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _telefoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Telefone/WhatsApp',
-                      border: OutlineInputBorder(),
-                    ),
+                    inputFormatters: [_maskTelefone],
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(labelText: 'Telefone/WhatsApp', border: OutlineInputBorder()),
                   ),
                 ),
               ],
@@ -96,12 +100,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               subtitle: Text(DateFormat('dd/MM/yyyy').format(_dataSelecionada)),
               leading: const Icon(Icons.calendar_today),
               onTap: () async {
-                DateTime? picked = await showDatePicker(
-                  context: context,
-                  initialDate: _dataSelecionada,
-                  firstDate: DateTime(1960),
-                  lastDate: DateTime(2030),
-                );
+                DateTime? picked = await showDatePicker(context: context, initialDate: _dataSelecionada, firstDate: DateTime(1960), lastDate: DateTime(2030));
                 if (picked != null) setState(() => _dataSelecionada = picked);
               },
             ),
@@ -112,33 +111,22 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
               onPressed: () async {
                 final dadosPaciente = {
                   'nome': _nomeController.text,
-                  'ano_nascimento': int.tryParse(_anoController.text) ?? 0,
+                  'data_nascimento': _nascimentoController.text,
                   'telefone': _telefoneController.text,
                   'data_avaliacao': _dataSelecionada.toIso8601String(),
                 };
 
                 if (isEditing) {
-                  await DbHelper.atualizarPaciente(
-                    widget.pacienteParaEditar!['id'],
-                    dadosPaciente,
-                  );
+                  await DbHelper.atualizarPaciente(widget.pacienteParaEditar!['id'], dadosPaciente);
                   if (mounted) {
                     bool? editarFinanceiro = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Dados Básicos Salvos'),
-                        content: const Text(
-                          'Deseja editar também os valores e detalhes da avaliação?',
-                        ),
+                        content: const Text('Deseja editar também os valores e detalhes da avaliação?'),
                         actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Não'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Sim, Editar Tudo'),
-                          ),
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Não')),
+                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sim, Editar Tudo')),
                         ],
                       ),
                     );
@@ -148,10 +136,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AvaliacaoSucessoScreen(
-                              pacienteId: widget.pacienteParaEditar!['id'],
-                              dadosAntigos: widget.pacienteParaEditar,
-                            ),
+                            builder: (context) => AvaliacaoSucessoScreen(pacienteId: widget.pacienteParaEditar!['id'], dadosAntigos: widget.pacienteParaEditar),
                           ),
                         );
                       } else {
@@ -163,40 +148,20 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                   final idNovo = await DbHelper.inserirPaciente(dadosPaciente);
 
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Paciente Cadastrado')),
-                    );
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paciente Cadastrado')));
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            AvaliacaoSucessoScreen(pacienteId: idNovo),
-                      ),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => AvaliacaoSucessoScreen(pacienteId: idNovo)));
                   }
                 }
-
               },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 55),
-                backgroundColor: Colors.blue[700],
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO',
-              ),
+              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 55), backgroundColor: Colors.blue[700], foregroundColor: Colors.white),
+              child: Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO'),
             ),
 
             if (!isEditing) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const HistoricoPacienteScreen(),
-                  ),
-                ),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())),
                 icon: const Icon(Icons.analytics_outlined),
                 label: const Text('VER HISTÓRICO'),
                 style: OutlinedButton.styleFrom(

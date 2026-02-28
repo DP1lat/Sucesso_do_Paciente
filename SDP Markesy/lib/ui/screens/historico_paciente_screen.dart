@@ -135,7 +135,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                               children: [
                                 const Divider(),
                                 _buildInfoRow(Icons.phone, 'Telefone', item['telefone']),
-                                _buildInfoRow(Icons.cake, 'Ano Nascimento', item['ano_nascimento']),
+                                _buildInfoRow(Icons.cake, 'Data de Nascimento', (item['data_nascimento'] == null || item['data_nascimento'] == '0') ? 'Não informada' : item['data_nascimento']),
                                 const SizedBox(height: 16),
                                 _buildInfoRow(Icons.person, 'Profissional', item['profissional']),
                                 _buildInfoRow(Icons.medical_services, 'Especialidade', item['especialidade']),

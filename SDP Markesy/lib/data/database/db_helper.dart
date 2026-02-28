@@ -31,7 +31,7 @@ class DbHelper {
             CREATE TABLE pacientes (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               nome TEXT,
-              ano_nascimento INTEGER,
+              data_nascimento TEXT,
               telefone TEXT,
               data_avaliacao TEXT
             )
@@ -74,7 +74,7 @@ class DbHelper {
     String query =
         '''
       SELECT 
-        p.id, p.nome, p.data_avaliacao, p.ano_nascimento, p.telefone,
+        p.id, p.nome, p.data_avaliacao, p.data_nascimento, p.telefone,
         a.fechou_pacote, a.profissional, a.especialidade, a.valor,
         a.tipo_pagamento, a.forma_pagamento, a.num_sessoes, a.observacoes
       FROM pacientes p
