@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/ui/screens/cadastro_paciente_screen.dart';
+import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import '../../data/database/db_helper.dart';
 
 class HistoricoPacienteScreen extends StatefulWidget {
@@ -155,12 +156,14 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                       icon: const Icon(Icons.edit, color: Colors.orange),
                                       label: const Text('Editar', style: TextStyle(color: Colors.orange)),
                                     ),
-                                    const SizedBox(width: 8),
-                                    TextButton.icon(
-                                      onPressed: () => _confirmarExclusao(context, item['id'], item['nome']),
-                                      icon: const Icon(Icons.delete_forever, color: Colors.red),
-                                      label: const Text('Excluir', style: TextStyle(color: Colors.red)),
-                                    ),
+                                    if (Sessao.isAdmin) ... [
+                                      const SizedBox(width: 8),
+                                      TextButton.icon(
+                                        onPressed: () => _confirmarExclusao(context, item['id'], item['nome']),
+                                        icon: const Icon(Icons.delete_forever, color: Colors.red),
+                                        label: const Text('Excluir', style: TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],

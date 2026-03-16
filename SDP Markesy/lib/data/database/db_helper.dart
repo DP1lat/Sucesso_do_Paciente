@@ -53,6 +53,16 @@ class DbHelper {
               FOREIGN KEY (paciente_id) REFERENCES pacientes (id)
             )
           ''');
+          await db.execute('''
+            CREATE TABLE usuarios (
+              id INTERGER PRIMARY KEY AUTOINCREMENT,
+              login TEXT UNIQUE,
+              senha TEXT,
+              cargo TEXT -- 'admin' ou 'funcionario'
+            ) 
+          ''');
+          await db.insert('usuarios', {'login': 'admin', 'senha': '123', 'cargo': 'admin'});
+          await db.insert('usuarios', {'login': 'funcionarios', 'senha': '123', 'cargo': 'funcinario'});
         },
       ),
     );
@@ -100,5 +110,11 @@ class DbHelper {
   static Future<void> atualizarAvaliacao(int pacienteId, Map<String, dynamic> dados) async {
     final db = await database;
     await db.update('avaliacoes', dados, where: 'paciente_id = ?', whereArgs: [pacienteId]);
+  }
+
+  static Future<Map<String, dynamic>?> verificarLogin(String usuario, String senha) async {
+    final db = await database;
+    List<Map<String, dynamic>> res = await db.query('usuarios', where: 'login = ? AND senha = ?', whereArgs: [usuario, senha]);
+    return res.isEmpty ? res.first : null;
   }
 }
