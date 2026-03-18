@@ -58,11 +58,14 @@ class DbHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               login TEXT UNIQUE,
               senha TEXT,
-              cargo TEXT -- 'admin' ou 'funcionario'
+              cargo TEXT
             ) 
           ''');
-          await db.insert('usuarios', {'login': 'admin', 'senha': '123', 'cargo': 'admin'});
-          await db.insert('usuarios', {'login': 'funcionarios', 'senha': '123', 'cargo': 'funcinario'});
+          await db.insert('usuarios', {
+            'login': 'admin', 
+            'senha': '123', 
+            'cargo': 'admin'
+          });
         },
       ),
     );
@@ -113,8 +116,17 @@ class DbHelper {
   }
 
   static Future<Map<String, dynamic>?> verificarLogin(String usuario, String senha) async {
-    final db = await database;
-    List<Map<String, dynamic>> res = await db.query('usuarios', where: 'login = ? AND senha = ?', whereArgs: [usuario, senha]);
-    return res.isEmpty ? res.first : null;
-  }
+  final db = await database;
+
+  List<Map<String, dynamic>> res = await db.query(
+    'usuarios', 
+    where: 'login = ? AND senha = ?', 
+    whereArgs: [usuario, senha]
+  );
+
+  if (res.isNotEmpty) {
+    return res.first;
+  }  
+  return null;
+}
 }

@@ -60,7 +60,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: Text('Bem-Vindo! Setor: ${auth.usuario?.setor.name}'),
+        child: Text('Bem-Vindo! Setor: ${Sessao.cargo ?? "Não identificado"}'),
       ),
     );
   }
