@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
+import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'data/providers/auth_provider.dart';
 // import 'ui/screens/login_screen.dart';
@@ -30,11 +32,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
-          // if (auth.usuario == null) {
-          //   return LoginScreen();
-          // }
-          // return const HomeScreen();
-          return const CadastroPacienteScreen();
+          if (auth.usuario == null) {
+            return LoginScreen();
+          }
+          return const HistoricoPacienteScreen();
         },
       ),
     );

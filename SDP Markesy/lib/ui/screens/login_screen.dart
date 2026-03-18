@@ -17,7 +17,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   bool _isLoading = false;
@@ -33,7 +33,7 @@ class LoginScreenState extends State<LoginScreen> {
       Sessao.usuario = user['login'];
       Sessao.cargo = user['cargo'];
 
-      Navigator.pushReplacement(context, MaterialPageRouter(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
     } else {
       const SnackBar(content: Text('Usuário ou senha incorretos!'), backgroundColor: Colors.red);
     }
@@ -43,36 +43,70 @@ class LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Container(
-          width: 300,
-          padding: EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Markesý', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              SizedBox(height: 30),
+              const Icon(Icons.local_hospital, size: 80, color: Colors.blue),
+              const SizedBox(height: 20),
+              const Text('Sucesso do Paciente', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 40),
               TextField(
                 controller: _userController,
-                decoration: InputDecoration(labelText: 'Usuário', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Usuário', border: OutlineInputBorder()),
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 16),
               TextField(
                 controller: _passController,
                 obscureText: true,
-                decoration: InputDecoration(labelText: 'Senha', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder()),
               ),
-              SizedBox(height: 25),
-              ElevatedButton(
-                onPressed: () {
-                  context.read<AuthProvider>().login(_userController.text, _passController.text);
-                },
-                child: Text('Entrar'),
-                style: ElevatedButton.styleFrom(minimumSize: Size(double.infinity, 50)),
-              ),
+              const SizedBox(height: 24),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _tentarLogin,
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                      child: const Text('ENTRAR'),
+                    ),
             ],
           ),
         ),
       ),
     );
+    // return Scaffold(
+    //   body: Center(
+    //     child: Container(
+    //       width: 300,
+    //       padding: EdgeInsets.all(20),
+    //       child: Column(
+    //         mainAxisAlignment: MainAxisAlignment.center,
+    //         children: [
+    //           Text('Markesý', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+    //           SizedBox(height: 30),
+    //           TextField(
+    //             controller: _userController,
+    //             decoration: InputDecoration(labelText: 'Usuário', border: OutlineInputBorder()),
+    //           ),
+    //           SizedBox(height: 15),
+    //           TextField(
+    //             controller: _passController,
+    //             obscureText: true,
+    //             decoration: InputDecoration(labelText: 'Senha', border: OutlineInputBorder()),
+    //           ),
+    //           SizedBox(height: 25),
+    //           ElevatedButton(
+    //             onPressed: () {
+    //               context.read<AuthProvider>().login(_userController.text, _passController.text);
+    //             },
+    //             child: Text('Entrar'),
+    //             style: ElevatedButton.styleFrom(minimumSize: Size(double.infinity, 50)),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }

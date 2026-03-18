@@ -55,7 +55,7 @@ class DbHelper {
           ''');
           await db.execute('''
             CREATE TABLE usuarios (
-              id INTERGER PRIMARY KEY AUTOINCREMENT,
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
               login TEXT UNIQUE,
               senha TEXT,
               cargo TEXT -- 'admin' ou 'funcionario'
