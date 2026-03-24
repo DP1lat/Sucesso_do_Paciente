@@ -55,12 +55,69 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => auth.logout(),
+            tooltip: 'Sair',
+            onPressed: () {
+              Sessao.usuario = null;
+              Sessao.cargo = null;
+              auth.logout();
+            },
           ),
         ],
       ),
       body: Center(
-        child: Text('Bem-Vindo! Setor: ${Sessao.cargo ?? "Não identificado"}'),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Bem-Vindo! Setor: ${Sessao.cargo ?? "Funcionário"}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(minimumSize: const Size(250, 50)),
+                icon: const Icon(Icons.person_add),
+                label: const Text('Cadastrar Novo Paciente'),
+                onPressed: () => Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (ctx) => const CadastroPacienteScreen())
+                ),
+              ),
+              
+              const SizedBox(height: 15),
+              
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(minimumSize: const Size(250, 50)),
+                icon: const Icon(Icons.history),
+                label: const Text('Ver Histórico da Clínica'),
+                onPressed: () => Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (ctx) => const HistoricoPacienteScreen())
+                ),
+              ),
+
+              // Lógica de nível de acesso
+              if (Sessao.isAdmin) ...[
+                const SizedBox(height: 15),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(250, 50),
+                  ),
+                  icon: const Icon(Icons.admin_panel_settings),
+                  label: const Text('Gerenciar Funcionários'),
+                  onPressed: () { 
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tela de gestão em desenvolvimento...'))
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

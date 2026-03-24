@@ -61,11 +61,7 @@ class DbHelper {
               cargo TEXT
             ) 
           ''');
-          await db.insert('usuarios', {
-            'login': 'admin', 
-            'senha': '123', 
-            'cargo': 'admin'
-          });
+          await db.insert('usuarios', {'login': 'admin', 'senha': '123', 'cargo': 'admin'});
         },
       ),
     );
@@ -116,17 +112,18 @@ class DbHelper {
   }
 
   static Future<Map<String, dynamic>?> verificarLogin(String usuario, String senha) async {
-  final db = await database;
+    final db = await database;
 
-  List<Map<String, dynamic>> res = await db.query(
-    'usuarios', 
-    where: 'login = ? AND senha = ?', 
-    whereArgs: [usuario, senha]
-  );
+    List<Map<String, dynamic>> res = await db.query('usuarios', where: 'login = ? AND senha = ?', whereArgs: [usuario, senha]);
 
-  if (res.isNotEmpty) {
-    return res.first;
-  }  
-  return null;
-}
+    if (res.isNotEmpty) {
+      return res.first;
+    }
+    return null;
+  }
+
+  static Future<int> inserirUsuario(Map<String, dynamic> dados) async {
+    final db = await database;
+    return await db.insert('usuario', dados);
+  }
 }

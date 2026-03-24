@@ -100,7 +100,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
             if (_fechouPacote) ...[
               const Divider(height: 40),
               DropdownButtonFormField<String>(
-                value: _especialidade,
+                initialValue: _especialidade,
                 decoration: const InputDecoration(labelText: 'Especialidade'),
                 items: ['Fisioterapia', 'Nutrição', 'Psicologia'].map((e) {
                   return DropdownMenuItem(value: e, child: Text(e));
@@ -142,7 +142,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _tipoPagamento,
+                initialValue: _tipoPagamento,
                 decoration: const InputDecoration(labelText: 'Tipo de Pagamento'),
                 items: ['Dinheiro', 'Crédito', 'Débito', 'Pix'].map((e) {
                   return DropdownMenuItem(value: e, child: Text(e));
