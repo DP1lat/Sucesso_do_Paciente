@@ -7,6 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'data/providers/auth_provider.dart';
 import 'ui/screens/cadastro_paciente_screen.dart';
+import 'package:sdp_markesy/data/security/secure_auth.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -15,6 +16,8 @@ void main() async {
 
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
+
+  await SecureAuth.inicializarAdminGeral();
 
   await localNotifier.setup(appName: 'Markesý', shortcutPolicy: ShortcutPolicy.requireCreate);
 

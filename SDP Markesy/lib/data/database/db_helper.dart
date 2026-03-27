@@ -61,7 +61,6 @@ class DbHelper {
               cargo TEXT
             ) 
           ''');
-          await db.insert('usuarios', {'login': 'admin', 'senha': '123', 'cargo': 'admin'});
         },
       ),
     );
