@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/main.dart';
+import 'package:sdp_markesy/data/security/secure_auth.dart';
 
 class Sessao {
   static String? usuario;
@@ -25,13 +26,25 @@ class _LoginScreenState extends State<LoginScreen> {
     String senhaDigitada = _passController.text.trim();
 
     if (loginDigitado.isEmpty || senhaDigitada.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, preencha todos os campos.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, preencha todos os campos.')));
       return;
     }
 
     setState(() => _isLoading = true);
+
+    bool isAdmin = await SecureAuth.validarLoginAdmin(loginDigitado, senhaDigitada);
+
+    if (isAdmin) {
+      Sessao.usuario = 'Administrador';
+      Sessao.cargo = 'admin';
+
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
+      return;
+    }
 
     final user = await DbHelper.verificarLogin(loginDigitado, senhaDigitada);
 
@@ -42,19 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
       Sessao.cargo = user['cargo'];
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context, 
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Usuário ou senha incorretos!'), 
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário ou senha incorretos!'), backgroundColor: Colors.red));
       }
     }
   }
@@ -77,37 +82,24 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Icon(Icons.local_hospital, size: 80, color: Colors.blue),
               const SizedBox(height: 20),
-              const Text(
-                'Sucesso do Paciente', 
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              const Text('Sucesso do Paciente', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 40),
               TextField(
                 controller: _userController,
-                decoration: const InputDecoration(
-                  labelText: 'Usuário', 
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
+                decoration: const InputDecoration(labelText: 'Usuário', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person)),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Senha', 
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
+                decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)),
               ),
               const SizedBox(height: 24),
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _tentarLogin,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                      ),
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
                       child: const Text('ENTRAR'),
                     ),
             ],

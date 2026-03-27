@@ -3,21 +3,26 @@ import 'package:provider/provider.dart';
 import 'package:sdp_markesy/ui/screens/gerenciar_usuarios_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
+import 'package:sdp_markesy/ui/screens/primeiro_acesso_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'data/providers/auth_provider.dart';
 import 'ui/screens/cadastro_paciente_screen.dart';
 import 'package:sdp_markesy/data/security/secure_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+bool _isFirstTime = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await const FlutterSecureStorage().deleteAll();
+
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  await SecureAuth.inicializarAdminGeral();
+  _isFirstTime = await SecureAuth.isPrimeiroAcesso();
 
   await localNotifier.setup(appName: 'Markesý', shortcutPolicy: ShortcutPolicy.requireCreate);
 
@@ -42,7 +47,7 @@ class MyApp extends StatelessWidget {
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.usuario == null) {
-            return LoginScreen();
+            return _isFirstTime ? const PrimeiroAcessoScreen() : const LoginScreen();
           }
           return const HistoricoPacienteScreen();
         },
