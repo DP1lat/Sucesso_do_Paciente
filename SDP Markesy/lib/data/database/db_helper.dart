@@ -126,4 +126,14 @@ class DbHelper {
     final db = await database;
     return await db.insert('usuarios', dados);
   }
+
+  static Future<List<Map<String, dynamic>>> buscarUsuarios() async {
+    final db = await database;
+    return await db.query('usuarios');
+  }
+
+  static Future<void> excluirUsuario(int id) async {
+    final db = await database;
+    await db.delete('usuarios', where: 'id = ?', whereArgs: [id]);
+  }
 }

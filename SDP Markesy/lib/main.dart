@@ -60,7 +60,9 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Sessao.usuario = null;
               Sessao.cargo = null;
-              auth.logout();
+              context.read<AuthProvider>().logout();
+
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
             },
           ),
         ],

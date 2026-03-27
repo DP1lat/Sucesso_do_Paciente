@@ -11,7 +11,7 @@ class GerenciarUsuariosScreen extends StatefulWidget {
 class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
-  String _cargoSelecionado = 'funcionário';
+  String _cargoSelecionado = 'funcionario';
 
   void _cadastrar() async {
     if (_userController.text.isEmpty || _passController.text.isEmpty) {
@@ -28,45 +28,83 @@ class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(/*const SnackBar(content: Text('Erro: Este login já existe.*/SnackBar(content: Text('Erro Real: $e'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(/*const SnackBar(content: Text('Erro: Este login já existe.*/ SnackBar(content: Text('Erro Real: $e'), backgroundColor: Colors.red));
     }
+
+    await DbHelper.inserirUsuario(novoUsuario);
+    setState(() {});
+    _userController.clear();
+    _passController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cadastrar Funcionários')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _userController,
-              decoration: const InputDecoration(labelText: 'Login/Usuário', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passController,
-              decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _cargoSelecionado,
-              decoration: const InputDecoration(labelText: 'Nível de Acesso', border: OutlineInputBorder()),
-              items: [
-                DropdownMenuItem(value: 'admin', child: Text('Administrador (Acesso Total)')),
-                DropdownMenuItem(value: 'funcionário', child: Text('Funcinário (Acesso Básico)')),
+      appBar: AppBar(title: const Text('Gerenciar Funcionários')),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                TextField(controller: _userController, decoration: const InputDecoration(labelText: 'Login')),
+                const SizedBox(height: 10),
+                TextField(controller: _passController, decoration: const InputDecoration(labelText: 'Senha')),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: _cargoSelecionado,
+                  items: const [
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    DropdownMenuItem(value: 'funcionario', child: Text('Funcionário')),
+                  ],
+                  onChanged: (v) => setState(() => _cargoSelecionado = v!),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(onPressed: _cadastrar, child: const Text('SALVAR NOVO USUÁRIO')),
               ],
-              onChanged: (value) => setState(() => _cargoSelecionado = value!),
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _cadastrar,
-              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-              child: const Text('Salvar novo Usuário'),
+          ),
+          const Divider(),
+          const Text('Usuários Ativos', style: TextStyle(fontWeight: FontWeight.bold)),
+          
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: DbHelper.buscarUsuarios(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                
+                final usuarios = snapshot.data!;
+                return ListView.separated(
+                  itemCount: usuarios.length,
+                  separatorBuilder: (context, index) => const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Colors.black12,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
+                  itemBuilder: (context, index) {
+                    final u = usuarios[index];
+                    return ListTile(
+                      leading: Icon(u['cargo'] == 'admin' ? Icons.verified_user : Icons.person),
+                      title: Text(u['login']),
+                      subtitle: Text('Cargo: ${u['cargo']}'),
+                      trailing: u['login'] == 'admin'
+                          ? null 
+                          : IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                await DbHelper.excluirUsuario(u['id']);
+                                setState(() {});
+                              },
+                            ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
