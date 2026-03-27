@@ -4,15 +4,19 @@ import 'package:sdp_markesy/ui/screens/gerenciar_usuarios_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:local_notifier/local_notifier.dart';
 import 'data/providers/auth_provider.dart';
-// import 'ui/screens/login_screen.dart';
 import 'ui/screens/cadastro_paciente_screen.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
+
+  await localNotifier.setup(appName: 'Markesý', shortcutPolicy: ShortcutPolicy.requireCreate);
 
   runApp(
     MultiProvider(
@@ -28,6 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Markesý',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
@@ -60,7 +65,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Sessao.usuario = null;
               Sessao.cargo = null;
-              context.read<AuthProvider>().logout();
+              auth.logout();
 
               Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const LoginScreen()), (route) => false);
             },

@@ -9,6 +9,7 @@ dependencies:
   provider: ^6.1.1            # Gerenciamento de estado e permissões
   intl: ^0.19.0               # Formatação de datas e moedas
   mask_text_input_formatter: ^2.9.0
+  local_notifier: ^0.1.6
 
 environment:
   sdk: '^3.11.0'

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sdp_markesy/ui/screens/cadastro_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import '../../data/database/db_helper.dart';
+import 'package:intl/intl.dart';
 
 class HistoricoPacienteScreen extends StatefulWidget {
   const HistoricoPacienteScreen({super.key});
@@ -127,7 +128,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                       child: ExpansionTile(
                         leading: Icon(Icons.circle, color: fechou ? Colors.green : Colors.red, size: 16),
                         title: Text(item['nome'] ?? 'Sem nome', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Avaliação: ${item['data_avaliacao']?.split('T')[0] ?? ''}'),
+                        subtitle: Text('Avaliação: ${_formatarData(item['data_avaliacao'])}'),
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -194,5 +195,18 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
         ],
       ),
     );
+  }
+
+  String _formatarData(String? dataIso) {
+    if (dataIso == null || dataIso.isEmpty) return 'Data não informada';
+    
+    try {
+      DateTime data = DateTime.parse(dataIso);
+      return DateFormat('dd/MM/yyyy').format(data);
+    } catch (e) {
+      var partes = dataIso.split('T')[0].split('-');
+      if (partes.length == 3) return '${partes[2]}/${partes[1]}/${partes[0]}';
+      return dataIso;
+    }
   }
 }

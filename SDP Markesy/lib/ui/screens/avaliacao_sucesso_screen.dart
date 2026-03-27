@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:local_notifier/local_notifier.dart';
+import 'package:sdp_markesy/main.dart';
+import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 
 class AvaliacaoSucessoScreen extends StatefulWidget {
   final int pacienteId;
@@ -153,36 +156,23 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               const Text('Forma de Pagamento:'),
               Row(
                 children: [
-                  Radio<String>(value: 'À vista', 
-                  groupValue: _formaPagamento, 
-                  onChanged: (value) => setState(() => _formaPagamento = value!)
-                  ),
+                  Radio<String>(value: 'À vista', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
                   const Text('À vista'),
-                  Radio<String>(value: 'Parcelado', 
-                  groupValue: _formaPagamento, 
-                  onChanged: (value) => setState(() => _formaPagamento = value!)
-                  ),
+                  Radio<String>(value: 'Parcelado', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
                   const Text('Parcelado'),
                 ],
               ),
 
-              if (_formaPagamento == 'Parcelado') ... [
+              if (_formaPagamento == 'Parcelado') ...[
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
                   initialValue: _parcelasSelecionada,
-                  decoration: const InputDecoration(
-                    labelText: 'Quantidade de parcelas ',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.credit_card),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Quantidade de parcelas ', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
                   items: _opcoesParcelas.map((int value) {
-                    return DropdownMenuItem<int>(
-                      value: value,
-                      child: Text('Parcelado em $value vezes'),
-                    );
+                    return DropdownMenuItem<int>(value: value, child: Text('Parcelado em $value vezes'));
                   }).toList(),
                   onChanged: (novoValor) => setState(() => _parcelasSelecionada = novoValor!),
-                )
+                ),
               ],
               const SizedBox(height: 16),
 
@@ -217,6 +207,17 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                   await DbHelper.atualizarAvaliacao(widget.pacienteId, novaAvaliacao);
                 } else {
                   await DbHelper.inserirAvaliacao(novaAvaliacao);
+
+                  LocalNotification notificacao = LocalNotification(
+                    title: 'Cadastro Finalizado!',
+                    body: _fechouPacote ? 'Paciente fechou tratamento de $_especialidade com sucesso! Clique para mais detalhes' : 'Paciente não fechou tratamento, dados salvos na Markesý.',
+                  );
+
+                  notificacao.onClick = () {
+                    navigatorKey.currentState?.push(MaterialPageRoute(builder: (context) => const HistoricoPacienteScreen()));
+
+                  };
+                  notificacao.show();
                 }
 
                 if (mounted) {

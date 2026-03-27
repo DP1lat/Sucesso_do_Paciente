@@ -28,13 +28,38 @@ class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(/*const SnackBar(content: Text('Erro: Este login já existe.*/ SnackBar(content: Text('Erro Real: $e'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Erro: Este login já existe.'), backgroundColor: Colors.red));
     }
 
-    await DbHelper.inserirUsuario(novoUsuario);
     setState(() {});
     _userController.clear();
     _passController.clear();
+  }
+
+  void _confirmarExclusao(int id, String login) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Exclusão'),
+          content: Text('Tem certeza que deseja excluir o usuário "$login"?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () async {
+                await DbHelper.excluirUsuario(id);
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário excluído!'), backgroundColor: Colors.red));
+                }
+              },
+              child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -47,9 +72,15 @@ class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
-                TextField(controller: _userController, decoration: const InputDecoration(labelText: 'Login')),
+                TextField(
+                  controller: _userController,
+                  decoration: const InputDecoration(labelText: 'Login'),
+                ),
                 const SizedBox(height: 10),
-                TextField(controller: _passController, decoration: const InputDecoration(labelText: 'Senha')),
+                TextField(
+                  controller: _passController,
+                  decoration: const InputDecoration(labelText: 'Senha'),
+                ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   initialValue: _cargoSelecionado,
@@ -66,23 +97,17 @@ class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
           ),
           const Divider(),
           const Text('Usuários Ativos', style: TextStyle(fontWeight: FontWeight.bold)),
-          
+
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: DbHelper.buscarUsuarios(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                
+
                 final usuarios = snapshot.data!;
                 return ListView.separated(
                   itemCount: usuarios.length,
-                  separatorBuilder: (context, index) => const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Colors.black12,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
+                  separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1, color: Colors.black12, indent: 16, endIndent: 16),
                   itemBuilder: (context, index) {
                     final u = usuarios[index];
                     return ListTile(
@@ -90,13 +115,10 @@ class _GerenciarUsuariosScreenState extends State<GerenciarUsuariosScreen> {
                       title: Text(u['login']),
                       subtitle: Text('Cargo: ${u['cargo']}'),
                       trailing: u['login'] == 'admin'
-                          ? null 
+                          ? null
                           : IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                await DbHelper.excluirUsuario(u['id']);
-                                setState(() {});
-                              },
+                              onPressed: () => _confirmarExclusao(u['id'], u['login']),
                             ),
                     );
                   },
