@@ -124,6 +124,6 @@ class DbHelper {
 
   static Future<int> inserirUsuario(Map<String, dynamic> dados) async {
     final db = await database;
-    return await db.insert('usuario', dados);
+    return await db.insert('usuarios', dados);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sdp_markesy/ui/screens/gerenciar_usuarios_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -69,49 +70,33 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'Bem-Vindo! Setor: ${Sessao.cargo ?? "Funcionário"}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              Text('Bem-Vindo! Setor: ${Sessao.cargo ?? "Funcionário"}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 30),
-              
+
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(minimumSize: const Size(250, 50)),
                 icon: const Icon(Icons.person_add),
                 label: const Text('Cadastrar Novo Paciente'),
-                onPressed: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (ctx) => const CadastroPacienteScreen())
-                ),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const CadastroPacienteScreen())),
               ),
-              
+
               const SizedBox(height: 15),
-              
+
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(minimumSize: const Size(250, 50)),
                 icon: const Icon(Icons.history),
                 label: const Text('Ver Histórico da Clínica'),
-                onPressed: () => Navigator.push(
-                  context, 
-                  MaterialPageRoute(builder: (ctx) => const HistoricoPacienteScreen())
-                ),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const HistoricoPacienteScreen())),
               ),
 
-              // Lógica de nível de acesso
               if (Sessao.isAdmin) ...[
                 const SizedBox(height: 15),
                 ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(250, 50),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white, minimumSize: const Size(250, 50)),
                   icon: const Icon(Icons.admin_panel_settings),
                   label: const Text('Gerenciar Funcionários'),
-                  onPressed: () { 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tela de gestão em desenvolvimento...'))
-                    );
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (ctx) => const GerenciarUsuariosScreen()));
                   },
                 ),
               ],

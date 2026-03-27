@@ -72,7 +72,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
     _profissionalController.dispose();
     _obsController.dispose();
     _valorController.dispose();
-    // _sessoesController.dispose();
     super.dispose();
   }
 
@@ -215,16 +214,13 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                 };
 
                 if (isEditing) {
-                  // Lógica de Atualização
                   await DbHelper.atualizarAvaliacao(widget.pacienteId, novaAvaliacao);
                 } else {
-                  // Lógica de Inserção
                   await DbHelper.inserirAvaliacao(novaAvaliacao);
                 }
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isEditing ? 'Avaliação atualizada!' : 'Dados registrados!')));
-                  // Volta para o histórico
                   Navigator.popUntil(context, (route) => route.isFirst);
                 }
               },
