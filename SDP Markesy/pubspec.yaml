@@ -11,9 +11,13 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   local_notifier: ^0.1.6
   flutter_secure_storage: ^10.0.0
+  supabase_flutter: ^2.12.2
+  flutter_dotenv: ^6.0.0
 
 environment:
   sdk: '^3.11.0'
 
 flutter:
   uses-material-design: true
+  assets:
+    - secrets.env
