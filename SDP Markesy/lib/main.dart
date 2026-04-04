@@ -4,7 +4,6 @@ import 'package:sdp_markesy/ui/screens/gerenciar_usuarios_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import 'package:sdp_markesy/ui/screens/primeiro_acesso_screen.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'data/providers/auth_provider.dart';
 import 'ui/screens/cadastro_paciente_screen.dart';

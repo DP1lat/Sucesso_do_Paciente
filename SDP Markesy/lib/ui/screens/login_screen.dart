@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
+import 'package:sdp_markesy/data/services/realtime_service.dart';
 import 'package:sdp_markesy/main.dart';
 import 'package:sdp_markesy/data/security/secure_auth.dart';
 
@@ -40,8 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       setState(() => _isLoading = false);
 
+      RealtimeService.iniciarEscuta();
+
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
       }
       return;
     }
@@ -53,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (user != null) {
       Sessao.usuario = user['login'];
       Sessao.cargo = user['cargo'];
+
+      RealtimeService.iniciarEscuta();
 
       if (mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));

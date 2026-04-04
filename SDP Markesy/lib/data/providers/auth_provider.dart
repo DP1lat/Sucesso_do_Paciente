@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/usuario_model.dart';
 import 'package:sdp_markesy/data/security/secure_auth.dart';
+import 'package:sdp_markesy/data/services/realtime_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   Usuario? _usuarioLogado;
@@ -15,10 +16,12 @@ class AuthProvider extends ChangeNotifier {
     if (isAdmin) {
       _usuarioLogado = Usuario(login: user, senha: password, setor: Setor.admin);
       notifyListeners();
+      RealtimeService.iniciarEscuta();
       return true;
     } else if (user == 'recepcao' && password == 'clinica') {
       _usuarioLogado = Usuario(login: user, senha: password, setor: Setor.recepcao);
       notifyListeners();
+      RealtimeService.iniciarEscuta();
       return true;
     }
 
@@ -28,5 +31,6 @@ class AuthProvider extends ChangeNotifier {
   void logout() {
     _usuarioLogado = null;
     notifyListeners();
+    RealtimeService.pararEscuta();
   }
 }

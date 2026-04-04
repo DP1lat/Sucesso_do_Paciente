@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/security/secure_auth.dart';
-import 'package:sdp_markesy/main.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 
 class PrimeiroAcessoScreen extends StatefulWidget {
