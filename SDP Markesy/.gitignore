@@ -45,4 +45,4 @@ app.*.map.json
 /android/app/release
 
 # Arquivos de variáveis de ambiente (Segurança)
-.env
+SDP Markesy/secrets.env
