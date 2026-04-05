@@ -25,7 +25,12 @@ class DbHelper {
     await _supabase.from('avaliacoes').update(novaAvaliacao).eq('paciente_id', pacienteId);
   }
 
-  static Future<List<Map<String, dynamic>>> buscarResumoPaciente(String ordem, {String filtro = ''}) async {
+  static Future<Map<String, dynamic>> buscarPacientePorId(int id) async {
+    final resposta = await _supabase.from('pacientes').select().eq('id', id).single();
+    return resposta;
+  }
+
+  static Future<List<Map<String, dynamic>>> buscarResumoPaciente(String ordem, {String filtro = '', int? mesFiltro}) async {
     var query = _supabase.from('pacientes').select(''' 
       *, 
       avaliacoes ( * )
@@ -55,13 +60,27 @@ class DbHelper {
         mapPlano['tipo_pagamento'] = avaliacao['tipo_pagamento'];
         mapPlano['num_parcelas'] = avaliacao['num_parcelas'];
       }
-      mapPlano.remove('avalicoes');
+      mapPlano.remove('avaliacoes');
       return mapPlano;
     }).toList();
 
-    if (ordem == 'nomeASC') {
+    if (mesFiltro != null) {
+      listaProcessada = listaProcessada.where((item) {
+        if (item['data_avaliacao'] == null) return false;
+        try {
+          DateTime data = DateTime.parse(item['data_avaliacao'].toString());
+          return data.month == mesFiltro;
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+    }
+
+    if (ordem == 'nome ASC') {
+      listaProcessada.sort((a, b) => (a['nome'] ?? '').toString().compareTo((b['nome'] ?? '').toString()));
+    } else if (ordem == 'valor DESC') {
       listaProcessada.sort((a, b) => (b['valor'] ?? 0.0).compareTo(a['valor'] ?? 0.0));
-    } else {
+    } else { 
       listaProcessada.sort((a, b) => (b['id'] ?? 0).compareTo(a['id'] ?? 0));
     }
 

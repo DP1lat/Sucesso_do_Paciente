@@ -188,6 +188,14 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               onPressed: () async {
                 String valorLimpo = _valorController.text.replaceAll('.', '').replaceAll(',', '.');
                 double valorFinal = double.tryParse(valorLimpo) ?? 0.0;
+                String dataCorretaAvaliacao;
+                
+                if (isEditing && widget.dadosAntigos != null) {
+                  dataCorretaAvaliacao = widget.dadosAntigos!['data_avaliacao'] ?? DateTime.now().toIso8601String();
+                } else {
+                  final dadosPaciente = await DbHelper.buscarPacientePorId(widget.pacienteId);
+                  dataCorretaAvaliacao = dadosPaciente['data_avaliacao'] ?? DateTime.now().toIso8601String();
+                }
 
                 final novaAvaliacao = {
                   'paciente_id': widget.pacienteId,
@@ -199,7 +207,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                   'num_parcelas': _formaPagamento == 'Parcelado' ? _parcelasSelecionada : 1,
                   'tipo_pagamento': _tipoPagamento,
                   'valor': valorFinal,
-                  'data_avaliacao': DateTime.now().toIso8601String(),
+                  'data_avaliacao': dataCorretaAvaliacao, 
                   'observacoes': _obsController.text,
                 };
 
@@ -215,7 +223,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
                   notificacao.onClick = () {
                     navigatorKey.currentState?.push(MaterialPageRoute(builder: (context) => const HistoricoPacienteScreen()));
-
                   };
                   notificacao.show();
                 }
