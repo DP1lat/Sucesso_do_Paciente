@@ -131,6 +131,21 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                   itemBuilder: (context, index) {
                     final item = lista[index];
                     bool fechou = item['fechou_pacote'] == 1;
+                    final tipoPag = item['tipo_pagamento']?.toString() ?? '';
+                    final formaPag = item['forma_pagamento']?.toString() ?? '';
+                    final parcelas = item['num_parcelas']?.toString() ?? '';
+
+                    String textoPagamento = '';
+                    if (tipoPag.isNotEmpty && tipoPag != 'null') textoPagamento += tipoPag;
+                    if (formaPag.isNotEmpty && formaPag != 'null') {
+                      textoPagamento += (textoPagamento.isNotEmpty ? ' - ' : '') + formaPag;
+                    }
+
+                    if (parcelas.isNotEmpty && parcelas != '0' && parcelas != '1' && parcelas != 'null') {
+                      textoPagamento += '(${parcelas}x)';
+                    }
+
+                    if (textoPagamento.trim().isEmpty) textoPagamento = '-';
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -151,6 +166,8 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                 _buildInfoRow(Icons.person, 'Profissional', item['profissional']),
                                 _buildInfoRow(Icons.medical_services, 'Especialidade', item['especialidade']),
                                 _buildInfoRow(Icons.payments, 'Valor', 'R\$ ${item['valor']?.toStringAsFixed(2) ?? '0.00'}'),
+                                _buildInfoRow(Icons.calendar_month, 'Sessões', item['num_sessoes']?.toString() ?? '-'),
+                                _buildInfoRow(Icons.credit_card, 'Pagamento', textoPagamento),
                                 const SizedBox(height: 10),
                                 const Text('Observações', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                 Text(item['observacoes'] ?? 'Nenhuma observação.', style: const TextStyle(fontStyle: FontStyle.italic)),
