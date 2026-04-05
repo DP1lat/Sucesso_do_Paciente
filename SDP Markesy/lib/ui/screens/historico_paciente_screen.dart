@@ -3,6 +3,7 @@ import 'package:sdp_markesy/ui/screens/cadastro_paciente_screen.dart';
 import 'package:sdp_markesy/ui/screens/login_screen.dart';
 import '../../data/database/db_helper.dart';
 import 'package:intl/intl.dart';
+import 'package:sdp_markesy/data/services/pdf_services.dart';
 
 class HistoricoPacienteScreen extends StatefulWidget {
   const HistoricoPacienteScreen({super.key});
@@ -50,6 +51,14 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
       appBar: AppBar(
         title: const Text('Histórico da Clínica'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            tooltip: 'Gerar Relátorio Geral',
+            onPressed: () async {
+              final lista = await DbHelper.buscarResumoPaciente(_criterioOrdenacao, filtro: _filtroNome);
+              await PdfServices.gerarRelatorioPacientes(lista);
+            },
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
             tooltip: 'Ordenar por',
@@ -151,13 +160,23 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                   children: [
                                     TextButton.icon(
                                       onPressed: () async {
+                                        await PdfServices.gerarFichaPaciente(item);
+                                      },
+                                      icon: const Icon(Icons.print, color: Colors.blue),
+                                      label: const Text('Imprimir', style: TextStyle(color: Colors.blue)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    TextButton.icon(
+                                      onPressed: () async {
                                         await Navigator.push(context, MaterialPageRoute(builder: (context) => CadastroPacienteScreen(pacienteParaEditar: item)));
-                                        setState(() { _refreshKey = UniqueKey(); });
+                                        setState(() {
+                                          _refreshKey = UniqueKey();
+                                        });
                                       },
                                       icon: const Icon(Icons.edit, color: Colors.orange),
                                       label: const Text('Editar', style: TextStyle(color: Colors.orange)),
                                     ),
-                                    if (Sessao.isAdmin) ... [
+                                    if (Sessao.isAdmin) ...[
                                       const SizedBox(width: 8),
                                       TextButton.icon(
                                         onPressed: () => _confirmarExclusao(context, item['id'], item['nome']),
@@ -199,7 +218,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
 
   String _formatarData(String? dataIso) {
     if (dataIso == null || dataIso.isEmpty) return 'Data não informada';
-    
+
     try {
       DateTime data = DateTime.parse(dataIso);
       return DateFormat('dd/MM/yyyy').format(data);
