@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'dart:async';
 
 class RealtimeService {
   static final _supabase = Supabase.instance.client;
@@ -17,7 +18,12 @@ class RealtimeService {
       callback: (payload) {
         final dados = payload.newRecord;
 
-        LocalNotification(title: 'Nova Avaliação Finalizada!', body: 'Um novo paciente foi registrado: ${dados['nome']} fechou o tratamento de ${dados['especialidade']} registrado no valor de R\$ ${dados['valor']}.').show();
+        Future.microtask(() {
+          LocalNotification(
+            title: 'Nova Avaliação Finalizada!',
+            body: 'Um novo paciente foi registrado: ${dados['nome']} fechou o tratamento de ${dados['especialidade']} registrado no valor de R\$ ${dados['valor']}.',
+          ).show();
+        });
       },
     );
 
@@ -28,7 +34,9 @@ class RealtimeService {
       callback: (payload) {
         final dadosAlterados = payload.newRecord;
 
-        LocalNotification(title: 'Paciente Atualizado!', body: 'Os dados de ${dadosAlterados['nome']} foram alterados.').show();
+        Future.microtask(() {
+          LocalNotification(title: 'Paciente Atualizado!', body: 'Os dados de ${dadosAlterados['nome']} foram alterados.').show();
+        });
       },
     );
     _canalRealtime!.subscribe();

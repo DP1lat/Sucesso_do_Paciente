@@ -55,7 +55,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
     _profissionalController = TextEditingController(text: widget.dadosAntigos?['profissional'] ?? '');
     _obsController = TextEditingController(text: widget.dadosAntigos?['observacoes'] ?? '');
 
-    double valorInicial = widget.dadosAntigos?['valor'] ?? 0.0;
+    double valorInicial = double.tryParse(widget.dadosAntigos?['valor'].toString() ?? '0.0') ?? 0.0;
     _valorController = TextEditingController(
       text: NumberFormat.currency(locale: 'pt_BR', symbol: '').format(valorInicial).trim(),
     );

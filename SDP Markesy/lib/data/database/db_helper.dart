@@ -23,7 +23,7 @@ class DbHelper {
   }
 
   static Future<void> atualizarAvaliacao(int pacienteId, Map<String, dynamic> novaAvaliacao) async {
-    await _supabase.from('avalicoes').update(novaAvaliacao).eq('pacienteId', pacienteId);
+    await _supabase.from('avaliacoes').update(novaAvaliacao).eq('paciente_id', pacienteId);
   }
 
   static Future<List<Map<String, dynamic>>> buscarResumoPaciente(String ordem, {String filtro = ''}) async {

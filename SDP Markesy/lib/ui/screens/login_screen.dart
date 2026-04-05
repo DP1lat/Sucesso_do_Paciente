@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/data/services/realtime_service.dart';
 import 'package:sdp_markesy/main.dart';
-import 'package:sdp_markesy/data/security/secure_auth.dart';
 
 class Sessao {
   static String? usuario;
@@ -32,22 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-
-    bool isAdmin = await SecureAuth.validarLoginAdmin(loginDigitado, senhaDigitada);
-
-    if (isAdmin) {
-      Sessao.usuario = 'Administrador';
-      Sessao.cargo = 'admin';
-
-      setState(() => _isLoading = false);
-
-      RealtimeService.iniciarEscuta();
-
-      if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-      }
-      return;
-    }
 
     final user = await DbHelper.verificarLogin(loginDigitado, senhaDigitada);
 
