@@ -80,10 +80,34 @@ class PdfServices {
     final especialidade = paciente['especialidade'] ?? 'Nenhuma avaliação';
     final profissional = paciente['profissional'] ?? '-';
     final numSessoes = paciente['num_sessoes'] ?? '-';
-    final formaPagamento = paciente['form_pagamento'] ?? '-';
     final valorCru = double.tryParse(paciente['valor']?.toString() ?? '0') ?? 0.0;
     final valorFormatado = formatadorMoeda.format(valorCru);
     final observacoes = paciente['observacoes'] ?? 'Nenhuma Observação registrada';
+    final tipoPag = paciente['tipo_pagamento']?.toString() ?? '';
+    final formaPag = paciente['forma_pagamento']?.toString() ?? '';
+    final parcelas = paciente['num_parcelas']?.toString() ?? '';
+
+    String textoPagamento = '';
+    if (tipoPag.isNotEmpty && tipoPag != 'null') textoPagamento += tipoPag;
+
+    if (formaPag.isNotEmpty && formaPag != 'null') {
+      textoPagamento += (textoPagamento.isNotEmpty ? ' - ' : '') + formaPag;
+    }
+
+    if (parcelas.isNotEmpty && parcelas != '0' && parcelas != '1' && parcelas != 'null') {
+      textoPagamento += ' (${parcelas}x)';
+    }
+
+    if (textoPagamento.trim().isEmpty) textoPagamento = '-';
+
+    String dataAva = '-';
+    if (paciente['data_avaliacao'] != null) {
+      try {
+        dataAva = DateFormat('dd/MM/yyyy').format(DateTime.parse(paciente['data_avaliacao']));
+      } catch (e) {
+        dataAva = paciente['data_avaliacao'];
+      }
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -122,7 +146,13 @@ class PdfServices {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('Nome: $nome', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text('Nome: $nome', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                      pw.Text('Avaliação: $dataAva', style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+                    ],
+                  ),
                   pw.SizedBox(height: 5),
                   pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Telefone: $telefone'), pw.Text('Data de Nascimento: $dataNasc')]),
                 ],
@@ -145,7 +175,7 @@ class PdfServices {
                 children: [
                   pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Especialidade: $especialidade'), pw.Text('Profissional: $profissional')]),
                   pw.SizedBox(height: 10),
-                  pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Número de Sessões: $numSessoes'), pw.Text('Pagamento: $formaPagamento')]),
+                  pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Número de Sessões: $numSessoes'), pw.Text('Pagamento: $textoPagamento')]),
                   pw.SizedBox(height: 10),
                   pw.Divider(color: PdfColors.grey300),
                   pw.SizedBox(height: 5),

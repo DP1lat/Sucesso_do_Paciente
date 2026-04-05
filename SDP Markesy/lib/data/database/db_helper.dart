@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DbHelper {
-
   static final _supabase = Supabase.instance.client;
 
   static Future<int> inserirPaciente(Map<String, dynamic> dadosPaciente) async {
@@ -51,6 +50,10 @@ class DbHelper {
         mapPlano['especialidade'] = avaliacao['especialidade'];
         mapPlano['valor'] = avaliacao['valor'];
         mapPlano['observacoes'] = avaliacao['observacoes'];
+        mapPlano['num_sessoes'] = avaliacao['num_sessoes'];
+        mapPlano['forma_pagamento'] = avaliacao['forma_pagamento'];
+        mapPlano['tipo_pagamento'] = avaliacao['tipo_pagamento'];
+        mapPlano['num_parcelas'] = avaliacao['num_parcelas'];
       }
       mapPlano.remove('avalicoes');
       return mapPlano;
