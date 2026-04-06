@@ -62,32 +62,54 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF2140e1),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.local_hospital, size: 80, color: Colors.blue),
+              Image.asset(
+                'assets/images/markesy-logo.png',
+                height: 120,
+              ),
               const SizedBox(height: 20),
-              const Text('Sucesso do Paciente', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('Sucesso do Paciente', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 40),
               TextField(
                 controller: _userController,
-                decoration: const InputDecoration(labelText: 'Usuário', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person)),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Usuário', 
+                  labelStyle: TextStyle(color: Colors.white70), 
+                  prefixIcon: Icon(Icons.person, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _passController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Senha',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  prefixIcon: Icon(Icons.lock, color: Colors.white),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                ),
               ),
               const SizedBox(height: 24),
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _tentarLogin,
-                      style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(200, 50),
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF2140e1),
+                      ),
                       child: const Text('ENTRAR'),
                     ),
             ],

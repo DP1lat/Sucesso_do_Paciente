@@ -21,5 +21,8 @@ environment:
 
 flutter:
   uses-material-design: true
+
+  
   assets:
     - secrets.env
+    - assets/images/

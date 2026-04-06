@@ -40,7 +40,15 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'Markesý',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+      theme: ThemeData(
+        useMaterial3: true, 
+        colorSchemeSeed: Colors.blue,
+        elevatedButtonTheme: const ElevatedButtonThemeData(
+          style: ButtonStyle(
+            mouseCursor: WidgetStatePropertyAll(SystemMouseCursors.click),
+          ),
+        ),
+      ),
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (auth.usuario == null) {
