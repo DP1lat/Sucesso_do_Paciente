@@ -21,7 +21,7 @@ class RealtimeService {
         Future.microtask(() {
           LocalNotification(
             title: 'Nova Avaliação Finalizada!',
-            body: 'Um novo paciente foi registrado: ${dados['nome']} fechou o tratamento de ${dados['especialidade']} registrado no valor de R\$ ${dados['valor']}.',
+            body: 'Um tratamento de ${dados['especialidade']} foi registrado no valor de R\$ ${dados['valor']}.',
           ).show();
         });
       },

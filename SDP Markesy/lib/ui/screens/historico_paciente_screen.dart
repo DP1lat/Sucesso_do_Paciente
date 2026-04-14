@@ -17,9 +17,12 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
   String _criterioOrdenacao = 'p.id DESC';
   final _searchController = TextEditingController();
   String _filtroNome = '';
-  
+
   int? _mesFiltro;
   final List<String> _nomesMeses = ['Todos', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+  int _paginaAtual = 1;
+  final int _itensPorPagina = 10;
 
   void _confirmarExclusao(BuildContext context, int id, String nome) {
     showDialog(
@@ -37,6 +40,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                 Navigator.pop(ctx);
                 setState(() {
                   _refreshKey = UniqueKey();
+                  _paginaAtual = 1;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registro removido com sucesso!')));
               }
@@ -68,6 +72,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
             onSelected: (String novoCriterio) {
               setState(() {
                 _criterioOrdenacao = novoCriterio;
+                _paginaAtual = 1;
                 _refreshKey = UniqueKey();
               });
             },
@@ -101,6 +106,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                 _searchController.clear();
                                 setState(() {
                                   _filtroNome = '';
+                                  _paginaAtual = 1;
                                   _refreshKey = UniqueKey();
                                 });
                               },
@@ -110,6 +116,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                     onChanged: (value) {
                       setState(() {
                         _filtroNome = value;
+                        _paginaAtual = 1;
                         _refreshKey = UniqueKey();
                       });
                     },
@@ -126,12 +133,16 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                     initialValue: _mesFiltro,
                     isExpanded: true,
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('Todos', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ...List.generate(12, (index) => DropdownMenuItem(value: index + 1, child: Text(_nomesMeses[index + 1])))
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Todos', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      ...List.generate(12, (index) => DropdownMenuItem(value: index + 1, child: Text(_nomesMeses[index + 1]))),
                     ],
                     onChanged: (val) {
                       setState(() {
                         _mesFiltro = val;
+                        _paginaAtual = 1;
                         _refreshKey = UniqueKey();
                       });
                     },
@@ -140,7 +151,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
               ],
             ),
           ),
-          
+
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               key: _refreshKey,
@@ -154,7 +165,16 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                   return Center(child: Text('Erro ao carregar dados: ${snapshot.error}'));
                 }
 
-                final lista = snapshot.data ?? [];
+                final listaTotal = snapshot.data ?? [];
+
+                final int totalPaginas = (listaTotal.length / _itensPorPagina).ceil();
+
+                if (_paginaAtual > totalPaginas && totalPaginas > 0) {
+                  _paginaAtual = totalPaginas;
+                }
+
+                final int startIndex = (_paginaAtual - 1) * _itensPorPagina;
+                final listaPaginada = listaTotal.skip(startIndex).take(_itensPorPagina).toList();
 
                 return Column(
                   children: [
@@ -163,20 +183,23 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('${lista.length} paciente(s) encontrado(s)', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                          Text(
+                            '${listaTotal.length} paciente(s) encontrado(s)',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                          ),
                         ],
                       ),
                     ),
                     const Divider(),
 
-                    if (lista.isEmpty)
+                    if (listaTotal.isEmpty)
                       const Expanded(child: Center(child: Text('Nenhum paciente encontrado para este filtro.')))
                     else
                       Expanded(
                         child: ListView.builder(
-                          itemCount: lista.length,
+                          itemCount: listaPaginada.length,
                           itemBuilder: (context, index) {
-                            final item = lista[index];
+                            final item = listaPaginada[index];
                             bool fechou = item['fechou_pacote'] == 1;
 
                             // Lógica do pagamento
@@ -208,7 +231,11 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                       children: [
                                         const Divider(),
                                         _buildInfoRow(Icons.phone, 'Telefone', item['telefone']),
-                                        _buildInfoRow(Icons.cake, 'Data de Nascimento', (item['data_nascimento'] == null || item['data_nascimento'] == '0') ? 'Não informada' : item['data_nascimento']),
+                                        _buildInfoRow(
+                                          Icons.cake,
+                                          'Data de Nascimento',
+                                          (item['data_nascimento'] == null || item['data_nascimento'] == '0') ? 'Não informada' : item['data_nascimento'],
+                                        ),
                                         const SizedBox(height: 16),
                                         _buildInfoRow(Icons.person, 'Profissional', item['profissional']),
                                         _buildInfoRow(Icons.medical_services, 'Especialidade', item['especialidade']),
@@ -257,6 +284,47 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                               ),
                             );
                           },
+                        ),
+                      ),
+                    if (listaTotal.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          border: Border(top: BorderSide(color: Colors.grey.shade300)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              color: _paginaAtual > 1 ? Colors.blue : Colors.grey,
+                              onPressed: _paginaAtual > 1
+                                  ? () {
+                                      setState(() {
+                                        _paginaAtual--;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              'Página $_paginaAtual de ${totalPaginas == 0 ? 1 : totalPaginas}',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 16),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              color: _paginaAtual < totalPaginas ? Colors.blue : Colors.grey,
+                              onPressed: _paginaAtual < totalPaginas
+                                  ? () {
+                                      setState(() {
+                                        _paginaAtual++;
+                                      });
+                                    }
+                                  : null,
+                            ),
+                          ],
                         ),
                       ),
                   ],

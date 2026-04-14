@@ -45,18 +45,14 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
   late TextEditingController _valorController;
 
   int _sessoesSelecionada = 1;
-  int _parcelasSelecionada = 2;
-  final List<int> _opcoesParcelas = List.generate(11, (index) => index + 2);
+  int _parcelasSelecionada = 1;
+  final List<int> _opcoesParcelas = List.generate(12, (index) => index + 1);
 
   String? _motivoSelecionado;
-  final List<String> _opcoesMotivo = [
-    'Preço / Valor',
-    'Horário incompatível',
-    'Distância / Localização',
-    'Vai pensar / Pesquisando',
-    'Problemas de Saúde / Internação',
-    'Outro'
-  ];
+  final List<String> _opcoesMotivo = ['Preço / Valor', 'Horário incompatível', 'Distância / Localização', 'Vai pensar / Pesquisando', 'Problemas de Saúde / Internação', 'Outro'];
+
+  String? _origemSelecionada;
+  final List<String> _opcoesOrigem = ['Indicação de Terceiros', 'Pesquisa no Google', 'Instagram / Facebook', 'Passou na frente da clínica', 'Parceria / Convênio', 'Outro'];
 
   @override
   void initState() {
@@ -72,7 +68,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
     if (widget.dadosAntigos != null) {
       _fechouPacote = widget.dadosAntigos!['fechou_pacote'] == 1;
-      
+
       String esp = widget.dadosAntigos!['especialidade'] ?? 'Fisioterapia';
       _especialidade = ['Fisioterapia', 'Nutrição', 'Psicologia'].contains(esp) ? esp : 'Fisioterapia';
 
@@ -87,8 +83,11 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
       int parcelas = widget.dadosAntigos!['num_parcelas'] ?? 2;
       _parcelasSelecionada = _opcoesParcelas.contains(parcelas) ? parcelas : 2;
-      
+
       _motivoSelecionado = widget.dadosAntigos!['motivo_nao_fechamento'];
+
+      String org = widget.dadosAntigos!['origem'] ?? 'Indicação de Terceiros';
+      _origemSelecionada = _opcoesOrigem.contains(org) ? org : 'Indicação de Terceiros';
     }
   }
 
@@ -154,10 +153,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                     controller: _valorController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly, MoedaInputFormatter()],
-                    decoration: InputDecoration(
-                      labelText: _fechouPacote ? 'Valor do Pacote (R\$)' : 'Valor da Avaliação (R\$)', 
-                      border: const OutlineInputBorder()
-                    ),
+                    decoration: InputDecoration(labelText: _fechouPacote ? 'Valor do Pacote (R\$)' : 'Valor da Avaliação (R\$)', border: const OutlineInputBorder()),
                   ),
                 ),
               ],
@@ -176,19 +172,41 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               items: ['Dinheiro', 'Crédito', 'Débito', 'Pix'].map((e) {
                 return DropdownMenuItem(value: e, child: Text(e));
               }).toList(),
-              onChanged: (value) => setState(() => _tipoPagamento = value!),
+              onChanged: (value) {
+                setState(() {
+                  _tipoPagamento = value!;
+                  if (_tipoPagamento != 'Crédito') {
+                    _parcelasSelecionada = 1;
+                  }
+                });
+              },
+            ),
+            if (_tipoPagamento == 'Crédito') ...[
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
+                initialValue: _parcelasSelecionada,
+                decoration: const InputDecoration(labelText: 'Quantidade de parcelas', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
+                items: _opcoesParcelas.map((int value) {
+                  return DropdownMenuItem<int>(value: value, child: Text(value == 1 ? '1x (Á vista no Crédito)' : 'Parcelado em $value vezes'));
+                }).toList(),
+                onChanged: (novoValor) => setState(() => _parcelasSelecionada == novoValor!),
+              ),
+            ],
+            const Divider(height: 40),
+
+            DropdownButtonFormField<String>(
+              initialValue: _origemSelecionada,
+              decoration: const InputDecoration(
+                labelText: 'Como o paciente conheceu a clínica?',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.share_location)
+              ),
+              items: _opcoesOrigem.map((e) {
+                return DropdownMenuItem( value: e, child: Text(e));
+              }).toList(),
+              onChanged: (value) => setState(() => _origemSelecionada = value!),
             ),
             const SizedBox(height: 16),
-
-            const Text('Forma de Pagamento:'),
-            Row(
-              children: [
-                Radio<String>(value: 'À vista', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
-                const Text('À vista'),
-                Radio<String>(value: 'Parcelado', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
-                const Text('Parcelado'),
-              ],
-            ),
 
             if (_formaPagamento == 'Parcelado') ...[
               const SizedBox(height: 8),
@@ -203,31 +221,18 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
             ],
             const SizedBox(height: 16),
 
-            // SE NÃO FECHOU PACOTE, MOSTRA A CAIXA DE MOTIVOS
             if (!_fechouPacote) ...[
-              const Divider(height: 40),
-              const Text('Motivo por não ter fechado o pacote:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
+              DropdownButtonFormField<String>(
+                value: _motivoSelecionado,
+                decoration: const InputDecoration(
+                  labelText: 'Motivo por não ter fechado o pacote', 
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.cancel_outlined, color: Colors.red)
                 ),
-                child: Column(
-                  children: _opcoesMotivo.map((motivo) {
-                    return RadioListTile<String>(
-                      title: Text(motivo),
-                      value: motivo,
-                      groupValue: _motivoSelecionado,
-                      activeColor: Colors.red,
-                      onChanged: (String? value) {
-                        setState(() {
-                          _motivoSelecionado = value;
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
+                items: _opcoesMotivo.map((motivo) {
+                  return DropdownMenuItem(value: motivo, child: Text(motivo));
+                }).toList(),
+                onChanged: (value) => setState(() => _motivoSelecionado = value),
               ),
               const SizedBox(height: 16),
             ],
@@ -249,7 +254,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                 String valorLimpo = _valorController.text.replaceAll('.', '').replaceAll(',', '.');
                 double valorFinal = double.tryParse(valorLimpo) ?? 0.0;
                 String dataCorretaAvaliacao;
-                
+
                 if (isEditing && widget.dadosAntigos != null) {
                   dataCorretaAvaliacao = widget.dadosAntigos!['data_avaliacao'] ?? DateTime.now().toIso8601String();
                 } else {
@@ -257,19 +262,22 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                   dataCorretaAvaliacao = dadosPaciente['data_avaliacao'] ?? DateTime.now().toIso8601String();
                 }
 
+                String formaPagamentoFinal = (_tipoPagamento == 'Crédito' && _parcelasSelecionada > 1) ? 'Parcelado' : 'À vista';
+
                 final novaAvaliacao = {
                   'paciente_id': widget.pacienteId,
                   'fechou_pacote': _fechouPacote ? 1 : 0,
-                  'profissional': _profissionalController.text, 
+                  'profissional': _profissionalController.text,
                   'especialidade': _especialidade,
-                  'num_sessoes': _fechouPacote ? _sessoesSelecionada : 0, 
-                  'forma_pagamento': _formaPagamento, 
+                  'num_sessoes': _fechouPacote ? _sessoesSelecionada : 0,
+                  'forma_pagamento': formaPagamentoFinal,
                   'num_parcelas': _formaPagamento == 'Parcelado' ? _parcelasSelecionada : 1,
-                  'tipo_pagamento': _tipoPagamento, 
-                  'valor': valorFinal, 
-                  'data_avaliacao': dataCorretaAvaliacao, 
-                  'observacoes': _obsController.text, 
-                  'motivo_nao_fechamento': _fechouPacote ? null : _motivoSelecionado, 
+                  'tipo_pagamento': _tipoPagamento,
+                  'valor': valorFinal,
+                  'data_avaliacao': dataCorretaAvaliacao,
+                  'observacoes': _obsController.text,
+                  'motivo_nao_fechamento': _fechouPacote ? null : _motivoSelecionado,
+                  'origem': _origemSelecionada,
                 };
 
                 if (isEditing) {
