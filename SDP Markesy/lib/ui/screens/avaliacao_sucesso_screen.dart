@@ -48,6 +48,16 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
   int _parcelasSelecionada = 2;
   final List<int> _opcoesParcelas = List.generate(11, (index) => index + 2);
 
+  String? _motivoSelecionado;
+  final List<String> _opcoesMotivo = [
+    'Preço / Valor',
+    'Horário incompatível',
+    'Distância / Localização',
+    'Vai pensar / Pesquisando',
+    'Problemas de Saúde / Internação',
+    'Outro'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -62,11 +72,23 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
     if (widget.dadosAntigos != null) {
       _fechouPacote = widget.dadosAntigos!['fechou_pacote'] == 1;
-      _especialidade = widget.dadosAntigos!['especialidade'] ?? 'Fisioterapia';
-      _formaPagamento = widget.dadosAntigos!['forma_pagamento'] ?? 'À vista';
-      _tipoPagamento = widget.dadosAntigos!['tipo_pagamento'] ?? 'Crédito';
-      _sessoesSelecionada = widget.dadosAntigos!['num_sessoes'] ?? 1;
-      _parcelasSelecionada = widget.dadosAntigos!['num_parcelas'] ?? 2;
+      
+      String esp = widget.dadosAntigos!['especialidade'] ?? 'Fisioterapia';
+      _especialidade = ['Fisioterapia', 'Nutrição', 'Psicologia'].contains(esp) ? esp : 'Fisioterapia';
+
+      String fp = widget.dadosAntigos!['forma_pagamento'] ?? 'À vista';
+      _formaPagamento = ['À vista', 'Parcelado'].contains(fp) ? fp : 'À vista';
+
+      String tp = widget.dadosAntigos!['tipo_pagamento'] ?? 'Crédito';
+      _tipoPagamento = ['Dinheiro', 'Crédito', 'Débito', 'Pix'].contains(tp) ? tp : 'Crédito';
+
+      int sessoes = widget.dadosAntigos!['num_sessoes'] ?? 1;
+      _sessoesSelecionada = (sessoes >= 1 && sessoes <= 10) ? sessoes : 1;
+
+      int parcelas = widget.dadosAntigos!['num_parcelas'] ?? 2;
+      _parcelasSelecionada = _opcoesParcelas.contains(parcelas) ? parcelas : 2;
+      
+      _motivoSelecionado = widget.dadosAntigos!['motivo_nao_fechamento'];
     }
   }
 
@@ -93,26 +115,27 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
             const SizedBox(height: 10),
 
             SwitchListTile(
-              title: Text(_fechouPacote ? 'Sim, pacote fechado!' : 'Não fechou ainda'),
+              title: Text(_fechouPacote ? 'Sim, pacote fechado!' : 'Não fechou, apenas Avaliação'),
               value: _fechouPacote,
               activeThumbColor: Colors.green,
               onChanged: (value) => setState(() => _fechouPacote = value),
             ),
 
-            if (_fechouPacote) ...[
-              const Divider(height: 40),
-              DropdownButtonFormField<String>(
-                initialValue: _especialidade,
-                decoration: const InputDecoration(labelText: 'Especialidade'),
-                items: ['Fisioterapia', 'Nutrição', 'Psicologia'].map((e) {
-                  return DropdownMenuItem(value: e, child: Text(e));
-                }).toList(),
-                onChanged: (value) => setState(() => _especialidade = value!),
-              ),
-              const SizedBox(height: 16),
+            const Divider(height: 40),
 
-              Row(
-                children: [
+            DropdownButtonFormField<String>(
+              initialValue: _especialidade,
+              decoration: const InputDecoration(labelText: 'Especialidade'),
+              items: ['Fisioterapia', 'Nutrição', 'Psicologia'].map((e) {
+                return DropdownMenuItem(value: e, child: Text(e));
+              }).toList(),
+              onChanged: (value) => setState(() => _especialidade = value!),
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                if (_fechouPacote) ...[
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       initialValue: _sessoesSelecionada,
@@ -124,68 +147,105 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                     ),
                   ),
                   const SizedBox(width: 16),
+                ],
 
-                  Expanded(
-                    child: TextField(
-                      controller: _valorController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, MoedaInputFormatter()],
-                      decoration: const InputDecoration(labelText: 'Valor total (R\$)', border: OutlineInputBorder()),
+                Expanded(
+                  child: TextField(
+                    controller: _valorController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, MoedaInputFormatter()],
+                    decoration: InputDecoration(
+                      labelText: _fechouPacote ? 'Valor do Pacote (R\$)' : 'Valor da Avaliação (R\$)', 
+                      border: const OutlineInputBorder()
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: _profissionalController,
-                decoration: const InputDecoration(labelText: 'Nome do Profissional', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                initialValue: _tipoPagamento,
-                decoration: const InputDecoration(labelText: 'Tipo de Pagamento'),
-                items: ['Dinheiro', 'Crédito', 'Débito', 'Pix'].map((e) {
-                  return DropdownMenuItem(value: e, child: Text(e));
-                }).toList(),
-                onChanged: (value) => setState(() => _tipoPagamento = value!),
-              ),
-              const SizedBox(height: 16),
-
-              const Text('Forma de Pagamento:'),
-              Row(
-                children: [
-                  Radio<String>(value: 'À vista', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
-                  const Text('À vista'),
-                  Radio<String>(value: 'Parcelado', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
-                  const Text('Parcelado'),
-                ],
-              ),
-
-              if (_formaPagamento == 'Parcelado') ...[
-                const SizedBox(height: 8),
-                DropdownButtonFormField<int>(
-                  initialValue: _parcelasSelecionada,
-                  decoration: const InputDecoration(labelText: 'Quantidade de parcelas ', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
-                  items: _opcoesParcelas.map((int value) {
-                    return DropdownMenuItem<int>(value: value, child: Text('Parcelado em $value vezes'));
-                  }).toList(),
-                  onChanged: (novoValor) => setState(() => _parcelasSelecionada = novoValor!),
                 ),
               ],
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 16),
 
-              TextField(
-                controller: _obsController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Observações Adicionais', border: OutlineInputBorder()),
+            TextField(
+              controller: _profissionalController,
+              decoration: const InputDecoration(labelText: 'Nome do Profissional', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+
+            DropdownButtonFormField<String>(
+              initialValue: _tipoPagamento,
+              decoration: const InputDecoration(labelText: 'Tipo de Pagamento'),
+              items: ['Dinheiro', 'Crédito', 'Débito', 'Pix'].map((e) {
+                return DropdownMenuItem(value: e, child: Text(e));
+              }).toList(),
+              onChanged: (value) => setState(() => _tipoPagamento = value!),
+            ),
+            const SizedBox(height: 16),
+
+            const Text('Forma de Pagamento:'),
+            Row(
+              children: [
+                Radio<String>(value: 'À vista', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
+                const Text('À vista'),
+                Radio<String>(value: 'Parcelado', groupValue: _formaPagamento, onChanged: (value) => setState(() => _formaPagamento = value!)),
+                const Text('Parcelado'),
+              ],
+            ),
+
+            if (_formaPagamento == 'Parcelado') ...[
+              const SizedBox(height: 8),
+              DropdownButtonFormField<int>(
+                initialValue: _parcelasSelecionada,
+                decoration: const InputDecoration(labelText: 'Quantidade de parcelas ', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
+                items: _opcoesParcelas.map((int value) {
+                  return DropdownMenuItem<int>(value: value, child: Text('Parcelado em $value vezes'));
+                }).toList(),
+                onChanged: (novoValor) => setState(() => _parcelasSelecionada = novoValor!),
               ),
             ],
+            const SizedBox(height: 16),
+
+            // SE NÃO FECHOU PACOTE, MOSTRA A CAIXA DE MOTIVOS
+            if (!_fechouPacote) ...[
+              const Divider(height: 40),
+              const Text('Motivo por não ter fechado o pacote:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: _opcoesMotivo.map((motivo) {
+                    return RadioListTile<String>(
+                      title: Text(motivo),
+                      value: motivo,
+                      groupValue: _motivoSelecionado,
+                      activeColor: Colors.red,
+                      onChanged: (String? value) {
+                        setState(() {
+                          _motivoSelecionado = value;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            TextField(
+              controller: _obsController,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Observações Adicionais', border: OutlineInputBorder()),
+            ),
 
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () async {
+                if (!_fechouPacote && _motivoSelecionado == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, selecione um motivo para o não fechamento.')));
+                  return;
+                }
+
                 String valorLimpo = _valorController.text.replaceAll('.', '').replaceAll(',', '.');
                 double valorFinal = double.tryParse(valorLimpo) ?? 0.0;
                 String dataCorretaAvaliacao;
@@ -200,15 +260,16 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                 final novaAvaliacao = {
                   'paciente_id': widget.pacienteId,
                   'fechou_pacote': _fechouPacote ? 1 : 0,
-                  'profissional': _profissionalController.text,
+                  'profissional': _profissionalController.text, 
                   'especialidade': _especialidade,
-                  'num_sessoes': _sessoesSelecionada,
-                  'forma_pagamento': _formaPagamento,
+                  'num_sessoes': _fechouPacote ? _sessoesSelecionada : 0, 
+                  'forma_pagamento': _formaPagamento, 
                   'num_parcelas': _formaPagamento == 'Parcelado' ? _parcelasSelecionada : 1,
-                  'tipo_pagamento': _tipoPagamento,
-                  'valor': valorFinal,
+                  'tipo_pagamento': _tipoPagamento, 
+                  'valor': valorFinal, 
                   'data_avaliacao': dataCorretaAvaliacao, 
-                  'observacoes': _obsController.text,
+                  'observacoes': _obsController.text, 
+                  'motivo_nao_fechamento': _fechouPacote ? null : _motivoSelecionado, 
                 };
 
                 if (isEditing) {
@@ -218,7 +279,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
                   LocalNotification notificacao = LocalNotification(
                     title: 'Cadastro Finalizado!',
-                    body: _fechouPacote ? 'Paciente fechou tratamento de $_especialidade com sucesso! Clique para mais detalhes' : 'Paciente não fechou tratamento, dados salvos na Markesý.',
+                    body: _fechouPacote ? 'Paciente fechou pacote com sucesso!' : 'Avaliação registrada. Paciente não fechou pacote.',
                   );
 
                   notificacao.onClick = () {
