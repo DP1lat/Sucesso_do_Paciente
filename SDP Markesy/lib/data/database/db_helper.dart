@@ -59,6 +59,7 @@ class DbHelper {
         mapPlano['forma_pagamento'] = avaliacao['forma_pagamento'];
         mapPlano['tipo_pagamento'] = avaliacao['tipo_pagamento'];
         mapPlano['num_parcelas'] = avaliacao['num_parcelas'];
+        mapPlano['origem'] = avaliacao['origem'];
       }
       mapPlano.remove('avaliacoes');
       return mapPlano;
@@ -80,7 +81,7 @@ class DbHelper {
       listaProcessada.sort((a, b) => (a['nome'] ?? '').toString().compareTo((b['nome'] ?? '').toString()));
     } else if (ordem == 'valor DESC') {
       listaProcessada.sort((a, b) => (b['valor'] ?? 0.0).compareTo(a['valor'] ?? 0.0));
-    } else { 
+    } else {
       listaProcessada.sort((a, b) => (b['id'] ?? 0).compareTo(a['id'] ?? 0));
     }
 
