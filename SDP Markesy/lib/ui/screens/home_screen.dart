@@ -97,7 +97,6 @@ class HomeScreen extends StatelessWidget {
                         description: 'Administre os profissionais da clínica, permissões e especialidades.',
                         icon: Icons.people_alt,
                         primaryBlue: primaryBlue,
-                        isHighlighted: true,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => const GerenciarUsuariosScreen())),
                       ),
                   ],

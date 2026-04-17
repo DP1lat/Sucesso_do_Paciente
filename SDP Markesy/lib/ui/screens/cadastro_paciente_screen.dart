@@ -1,14 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
-// import 'package:sdp_markesy/data/models/paciente_model.dart';
+import 'package:sdp_markesy/ui/screens/avaliacao_sucesso_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
-import 'avaliacao_sucesso_screen.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+
+// --- FORMATADOR DE DATA AUTOMÁTICO ---
+class DataInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.selection.baseOffset < oldValue.selection.baseOffset) {
+      return newValue;
+    }
+    var text = newValue.text.replaceAll('/', '');
+    if (text.length > 8) text = text.substring(0, 8);
+    
+    var formatted = '';
+    for (var i = 0; i < text.length; i++) {
+      formatted += text[i];
+      if ((i == 1 || i == 3) && i != text.length - 1) {
+        formatted += '/';
+      }
+    }
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class CadastroPacienteScreen extends StatefulWidget {
   final Map<String, dynamic>? pacienteParaEditar;
-
   const CadastroPacienteScreen({super.key, this.pacienteParaEditar});
 
   @override
@@ -17,162 +39,275 @@ class CadastroPacienteScreen extends StatefulWidget {
 
 class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   final _nomeController = TextEditingController();
-  final _nascimentoController = TextEditingController();
   final _telefoneController = TextEditingController();
-  final _maskTelefone = MaskTextInputFormatter(mask: '(##) #####-####', filter: {'#': RegExp(r'[0-9]')});
+  final _dataNascimentoController = TextEditingController();
+  final _dataAvaliacaoController = TextEditingController();
+  
+  bool _isLoading = false;
   DateTime _dataSelecionada = DateTime.now();
-  DateTime? _dataNascimentoSelecionada;
+  final Color primaryBlue = const Color(0xFF2441DE);
 
   @override
   void initState() {
     super.initState();
+    _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(_dataSelecionada);
+
     if (widget.pacienteParaEditar != null) {
       _nomeController.text = widget.pacienteParaEditar!['nome'] ?? '';
       _telefoneController.text = widget.pacienteParaEditar!['telefone'] ?? '';
-
-      String? dataSalva = widget.pacienteParaEditar!['data_nascimento'];
-
-      if (dataSalva != null && dataSalva.isNotEmpty) {
-        _nascimentoController.text = dataSalva;
-
+      _dataNascimentoController.text = widget.pacienteParaEditar!['data_nascimento'] ?? '';
+      
+      if (widget.pacienteParaEditar!['data_avaliacao'] != null) {
         try {
-          _dataNascimentoSelecionada = DateFormat('dd/MM/yyyy').parse(dataSalva);
+          _dataSelecionada = DateTime.parse(widget.pacienteParaEditar!['data_avaliacao']);
+          _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(_dataSelecionada);
         } catch (e) {
-          _dataNascimentoSelecionada = DateTime(2000);
+          _dataAvaliacaoController.text = widget.pacienteParaEditar!['data_avaliacao'];
         }
       }
+    }
+  }
+
+  Future<void> _selecionarData(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dataSelecionada,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: primaryBlue),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _dataSelecionada) {
+      setState(() {
+        _dataSelecionada = picked;
+        _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _telefoneController.dispose();
+    _dataNascimentoController.dispose();
+    _dataAvaliacaoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _salvarEAvancar() async {
+    if (_nomeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Informe o nome do paciente.')));
+      return;
+    }
+    setState(() => _isLoading = true);
+    final dadosPaciente = {
+      'nome': _nomeController.text.trim(),
+      'telefone': _telefoneController.text.trim(),
+      'data_nascimento': _dataNascimentoController.text.trim(),
+      'data_avaliacao': _dataSelecionada.toIso8601String(), 
+    };
+
+    int pacienteId;
+    if (widget.pacienteParaEditar != null) {
+      pacienteId = widget.pacienteParaEditar!['id'];
+      await DbHelper.atualizarPaciente(pacienteId, dadosPaciente);
+    } else {
+      pacienteId = await DbHelper.inserirPaciente(dadosPaciente);
+    }
+
+    setState(() => _isLoading = false);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AvaliacaoSucessoScreen(
+            pacienteId: pacienteId,
+            dadosAntigos: widget.pacienteParaEditar,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     bool isEditing = widget.pacienteParaEditar != null;
-
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Editar Paciente' : 'Novo Cadastro')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Informações do Paciente', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-
-            TextField(
-              controller: _nomeController,
-              decoration: const InputDecoration(labelText: 'Nome Completo', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _nascimentoController,
-                    readOnly: true,
-                    decoration: const InputDecoration(labelText: 'Data de Nascimento', border: OutlineInputBorder(), prefixIcon: Icon(Icons.cake)),
-                    onTap: () async {
-                      DateTime? picked = await showDatePicker(context: context, initialDate: _dataNascimentoSelecionada ?? DateTime(2000), firstDate: DateTime(1920), lastDate: DateTime.now());
-                      if (picked != null) {
-                        setState(() {
-                          _dataNascimentoSelecionada = picked;
-                          _nascimentoController.text = DateFormat('dd/MM/yyyy').format(picked);
-                        });
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: _telefoneController,
-                    inputFormatters: [_maskTelefone],
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Telefone/WhatsApp', border: OutlineInputBorder()),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            ListTile(
-              title: const Text('Data da Avaliação'),
-              subtitle: Text(DateFormat('dd/MM/yyyy').format(_dataSelecionada)),
-              leading: const Icon(Icons.calendar_today),
-              onTap: () async {
-                DateTime? picked = await showDatePicker(context: context, initialDate: _dataSelecionada, firstDate: DateTime(1960), lastDate: DateTime(2030));
-                if (picked != null) setState(() => _dataSelecionada = picked);
-              },
-            ),
-
-            const Spacer(),
-
-            ElevatedButton(
-              onPressed: () async {
-                final dadosPaciente = {
-                  'nome': _nomeController.text,
-                  'data_nascimento': _nascimentoController.text,
-                  'telefone': _telefoneController.text,
-                  'data_avaliacao': _dataSelecionada.toIso8601String(),
-                };
-
-                if (isEditing) {
-                  await DbHelper.atualizarPaciente(widget.pacienteParaEditar!['id'], dadosPaciente);
-                  if (mounted) {
-                    bool? editarFinanceiro = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Dados Básicos Salvos'),
-                        content: const Text('Deseja editar também os valores e detalhes da avaliação?'),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Não')),
-                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sim, Editar Tudo')),
-                        ],
-                      ),
-                    );
-
-                    if (mounted) {
-                      if (editarFinanceiro == true) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AvaliacaoSucessoScreen(pacienteId: widget.pacienteParaEditar!['id'], dadosAntigos: widget.pacienteParaEditar),
+      backgroundColor: Colors.grey.shade50,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      // --- BOTÃO DE VOLTAR COM HOVER QUADRADO ---
+                      Material(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            height: 40,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: const Icon(Icons.arrow_back, color: Colors.black87, size: 20),
                           ),
-                        );
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    }
-                  }
-                } else {
-                  final idNovo = await DbHelper.inserirPaciente(dadosPaciente);
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paciente Cadastrado')));
-
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AvaliacaoSucessoScreen(pacienteId: idNovo)));
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 55), backgroundColor: Colors.blue[700], foregroundColor: Colors.white),
-              child: Text(isEditing ? 'SALVAR ALTERAÇÕES' : 'PROSSEGUIR PARA AVALIAÇÃO'),
-            ),
-
-            if (!isEditing) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoricoPacienteScreen())),
-                icon: const Icon(Icons.analytics_outlined),
-                label: const Text('VER HISTÓRICO'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  side: BorderSide(color: Colors.blue[700]!, width: 2),
-                ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(isEditing ? 'EDIÇÃO' : 'ETAPA 1 DE 2', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: primaryBlue, letterSpacing: 1.2)),
+                          const SizedBox(height: 2),
+                          Text(isEditing ? 'Editar Cadastro' : 'Novo Cadastro', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                        ],
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5))]
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                              child: Icon(Icons.person, color: primaryBlue, size: 20),
+                            ),
+                            const SizedBox(width: 16),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Informações do Paciente', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                Text('Preencha os dados básicos.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        _buildLabel('Nome Completo'),
+                        TextField(controller: _nomeController, decoration: _inputDecoration(hint: 'Ex.: Maria da Silva')),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildLabel('Data de Nascimento', icon: Icons.cake_outlined),
+                                  TextField(
+                                    controller: _dataNascimentoController,
+                                    inputFormatters: [DataInputFormatter()], // MÁSCARA AUTOMÁTICA
+                                    keyboardType: TextInputType.number,
+                                    decoration: _inputDecoration(hint: 'DD/MM/AAAA'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildLabel('Telefone / WhatsApp', icon: Icons.phone_outlined),
+                                  TextField(controller: _telefoneController, decoration: _inputDecoration(hint: '(11) 90000-0000'), keyboardType: TextInputType.phone),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        // --- CAMPO DATA AVALIAÇÃO INTERATIVO ---
+                        _buildLabel('Data da Avaliação', icon: Icons.calendar_today),
+                        GestureDetector(
+                          onTap: () => _selecionarData(context),
+                          child: AbsorbPointer(
+                            child: TextField(
+                              controller: _dataAvaliacaoController,
+                              decoration: _inputDecoration(hint: 'Selecionar data').copyWith(
+                                suffixIcon: Icon(Icons.edit_calendar, color: primaryBlue, size: 20),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (ctx) => const HistoricoPacienteScreen())),
+                        icon: const Icon(Icons.history, size: 18),
+                        label: const Text('Ver histórico'),
+                        style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                      ),
+                      SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _salvarEAvancar,
+                          style: ElevatedButton.styleFrom(backgroundColor: primaryBlue, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                          child: _isLoading 
+                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Row(children: [Text('Prosseguir'), SizedBox(width: 8), Icon(Icons.arrow_forward, size: 18)]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLabel(String text, {IconData? icon}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+          if (icon != null) ...[Icon(icon, size: 14, color: Colors.grey.shade600), const SizedBox(width: 6)],
+          Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+      ]),
+    );
+  }
+
+  InputDecoration _inputDecoration({required String hint}) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: primaryBlue, width: 1.5)),
     );
   }
 }
