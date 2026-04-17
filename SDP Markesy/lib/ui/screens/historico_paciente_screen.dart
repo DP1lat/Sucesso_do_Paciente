@@ -56,13 +56,23 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Cor azul puxada da sua interface de pesquisa
+    final Color primaryBlue = Colors.blue.shade700;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white, // Fundo totalmente clean como no print
       appBar: AppBar(
-        title: const Text('Histórico da Clínica'),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent, // Evita que a barra mude de cor ao rolar (Material 3)
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black54),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Histórico da Clínica', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+            icon: Icon(Icons.picture_as_pdf_outlined, color: Colors.red.shade400),
             tooltip: 'Gerar Relatório Geral',
             onPressed: () async {
               final lista = await DbHelper.buscarResumoPaciente(_criterioOrdenacao, filtro: _filtroNome, mesFiltro: _mesFiltro);
@@ -75,7 +85,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
             },
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
+            icon: const Icon(Icons.filter_alt_outlined, color: Colors.black54),
             tooltip: 'Ordenar por',
             onSelected: (String novoCriterio) {
               setState(() {
@@ -90,99 +100,118 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
               const PopupMenuItem<String>(value: 'valor DESC', child: Text('Maior Valor')),
             ],
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // --- BARRA DE PESQUISA E FILTROS ---
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
             child: Row(
               children: [
                 Expanded(
                   flex: 2,
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Pesquisar paciente por nome...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _filtroNome = '';
-                                  _paginaAtual = 1; 
-                                  _refreshKey = UniqueKey();
-                                });
-                              },
-                            )
-                          : null,
+                  child: SizedBox(
+                    height: 40, // Deixa a barra mais fina e elegante
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Pesquisar paciente por nome...',
+                        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey.shade400, size: 20),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: primaryBlue)),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 16),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _filtroNome = '';
+                                    _paginaAtual = 1; 
+                                    _refreshKey = UniqueKey();
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _filtroNome = value;
+                          _paginaAtual = 1; 
+                          _refreshKey = UniqueKey();
+                        });
+                      },
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _filtroNome = value;
-                        _paginaAtual = 1; 
-                        _refreshKey = UniqueKey();
-                      });
-                    },
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 1,
-                  child: DropdownButtonFormField<int?>(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: SizedBox(
+                    height: 40,
+                    child: DropdownButtonFormField<int?>(
+                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                      ),
+                      initialValue: _mesFiltro,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Todos os Meses')),
+                        ...List.generate(12, (index) => DropdownMenuItem(value: index + 1, child: Text(_nomesMeses[index + 1])))
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          _mesFiltro = val;
+                          _paginaAtual = 1; 
+                          _refreshKey = UniqueKey();
+                        });
+                      },
                     ),
-                    initialValue: _mesFiltro,
-                    isExpanded: true,
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Todos os Meses', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ...List.generate(12, (index) => DropdownMenuItem(value: index + 1, child: Text(_nomesMeses[index + 1])))
-                    ],
-                    onChanged: (val) {
-                      setState(() {
-                        _mesFiltro = val;
-                        _paginaAtual = 1; 
-                        _refreshKey = UniqueKey();
-                      });
-                    },
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 1,
-                  child: DropdownButtonFormField<int?>(
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: SizedBox(
+                    height: 40,
+                    child: DropdownButtonFormField<int?>(
+                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                      ),
+                      initialValue: _statusFiltro,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                      items: const [
+                        DropdownMenuItem(value: null, child: Text('Todos os Status')),
+                        DropdownMenuItem(value: 1, child: Text('Fecharam Pacote')),
+                        DropdownMenuItem(value: 0, child: Text('Apenas Avaliação')),
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          _statusFiltro = val;
+                          _paginaAtual = 1; 
+                        });
+                      },
                     ),
-                    initialValue: _statusFiltro,
-                    isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(value: null, child: Text('Todos os Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DropdownMenuItem(value: 1, child: Text('Fecharam Pacote', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
-                      DropdownMenuItem(value: 0, child: Text('Apenas Avaliação', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))),
-                    ],
-                    onChanged: (val) {
-                      setState(() {
-                        _statusFiltro = val;
-                        _paginaAtual = 1; 
-                      });
-                    },
                   ),
                 ),
               ],
@@ -210,20 +239,20 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                 final listaPaginada = listaFiltrada.skip(startIndex).take(_itensPorPagina).toList();
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // --- TEXTO AZUL COM O CONTADOR DE PACIENTES ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${listaFiltrada.length} paciente(s) encontrado(s)', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                        ],
+                      child: Text(
+                        '${listaFiltrada.length} paciente(s) encontrado(s)', 
+                        style: TextStyle(fontWeight: FontWeight.w600, color: primaryBlue, fontSize: 13),
                       ),
                     ),
-                    const Divider(),
+                    const SizedBox(height: 8),
 
                     if (listaFiltrada.isEmpty)
-                      const Expanded(child: Center(child: Text('Nenhum paciente encontrado para este filtro.')))
+                      Expanded(child: Center(child: Text('Nenhum paciente encontrado para este filtro.', style: TextStyle(color: Colors.grey.shade600))))
                     else
                       Expanded(
                         child: ListView.builder(
@@ -246,18 +275,20 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                               elevation: 0,
                               color: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(10), // Borda mais suave do print
+                                side: BorderSide(color: Colors.grey.shade300), // Linha em volta do card
                               ),
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                               child: ExpansionTile(
                                 shape: const RoundedRectangleBorder(side: BorderSide.none),
+                                iconColor: Colors.black54, // Seta de expansão cinza
+                                collapsedIconColor: Colors.black54,
                                 leading: Padding(
-                                  padding: const EdgeInsets.only(top: 6.0),
+                                  padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 4.0),
                                   child: Icon(Icons.circle, color: fechou ? Colors.green : Colors.red, size: 10),
                                 ),
-                                title: Text(item['nome'] ?? 'Sem nome', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
-                                subtitle: Text('Avaliação · ${_formatarData(item['data_avaliacao'])}', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                                title: Text(item['nome'] ?? 'Sem nome', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+                                subtitle: Text('Avaliação · ${_formatarData(item['data_avaliacao'])}', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.all(16.0),
@@ -267,6 +298,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+                                        // --- O SEU GRID CLEAN COM TABELA PERMANECE INTACTO ---
                                         Table(
                                           border: TableBorder.symmetric(
                                             inside: BorderSide(color: Colors.grey.shade200, width: 1),
@@ -299,7 +331,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                           ],
                                         ),
                                         
-                                        // --- MOTIVO DO NÃO FECHAMENTO (Sempre visível se não fechou) ---
                                         if (!fechou) ...[
                                           const Divider(height: 1),
                                           _buildCleanInfoItem(
@@ -312,7 +343,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                           ),
                                         ],
 
-                                        // --- OBSERVAÇÕES (Sempre Visível) ---
                                         const Divider(height: 1),
                                         _buildCleanInfoItem(
                                           Icons.description_outlined, 
@@ -326,7 +356,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
 
                                         const SizedBox(height: 16),
                                         
-                                        // --- BOTÕES DE AÇÃO CLEAN ---
+                                        // --- SEUS BOTÕES DE AÇÃO CLEAN PERMANECEM ---
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -364,24 +394,28 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                         ),
                       ),
                       
+                    // --- PAGINAÇÃO CLEAN (Igual ao Print) ---
                     if (listaFiltrada.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                        decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.grey.shade200))),
+                        padding: const EdgeInsets.symmetric(vertical: 16.0), // Mais espaço, sem borda superior forte
+                        color: Colors.transparent, // Fundo transparente
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.chevron_left),
-                              color: _paginaAtual > 1 ? Colors.blue : Colors.grey,
+                              icon: const Icon(Icons.chevron_left, size: 20),
+                              color: _paginaAtual > 1 ? primaryBlue : Colors.grey.shade400,
                               onPressed: _paginaAtual > 1 ? () => setState(() => _paginaAtual--) : null,
                             ),
                             const SizedBox(width: 16),
-                            Text('Página $_paginaAtual de ${totalPaginas == 0 ? 1 : totalPaginas}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              'Página $_paginaAtual de ${totalPaginas == 0 ? 1 : totalPaginas}', 
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)
+                            ),
                             const SizedBox(width: 16),
                             IconButton(
-                              icon: const Icon(Icons.chevron_right),
-                              color: _paginaAtual < totalPaginas ? Colors.blue : Colors.grey,
+                              icon: const Icon(Icons.chevron_right, size: 20),
+                              color: _paginaAtual < totalPaginas ? primaryBlue : Colors.grey.shade400,
                               onPressed: _paginaAtual < totalPaginas ? () => setState(() => _paginaAtual++) : null,
                             ),
                           ],
@@ -413,13 +447,13 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                 const SizedBox(height: 4),
                 Text(
                   value, 
                   style: TextStyle(
-                    fontSize: 15, 
-                    fontWeight: isItalic ? FontWeight.normal : FontWeight.bold, 
+                    fontSize: 14, 
+                    fontWeight: isItalic ? FontWeight.normal : FontWeight.w600, 
                     fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
                     color: isItalic ? Colors.grey.shade500 : Colors.black87
                   )
