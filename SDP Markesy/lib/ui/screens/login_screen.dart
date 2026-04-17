@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/data/services/realtime_service.dart';
-import 'package:sdp_markesy/main.dart';
+import 'package:sdp_markesy/ui/screens/home_screen.dart';
 
 class Sessao {
   static String? usuario;
