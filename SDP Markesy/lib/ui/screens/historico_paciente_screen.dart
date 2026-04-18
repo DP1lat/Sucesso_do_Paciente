@@ -56,14 +56,13 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Cor azul puxada da sua interface de pesquisa
     final Color primaryBlue = Colors.blue.shade700;
 
     return Scaffold(
-      backgroundColor: Colors.white, // Fundo totalmente clean como no print
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent, // Evita que a barra mude de cor ao rolar (Material 3)
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black54),
@@ -106,7 +105,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- BARRA DE PESQUISA E FILTROS ---
           Padding(
             padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
             child: Row(
@@ -114,7 +112,7 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                 Expanded(
                   flex: 2,
                   child: SizedBox(
-                    height: 40, // Deixa a barra mais fina e elegante
+                    height: 40,
                     child: TextField(
                       controller: _searchController,
                       style: const TextStyle(fontSize: 14),
@@ -241,7 +239,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- TEXTO AZUL COM O CONTADOR DE PACIENTES ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                       child: Text(
@@ -275,13 +272,13 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                               elevation: 0,
                               color: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // Borda mais suave do print
-                                side: BorderSide(color: Colors.grey.shade300), // Linha em volta do card
+                                borderRadius: BorderRadius.circular(10),
+                                side: BorderSide(color: Colors.grey.shade300),
                               ),
                               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                               child: ExpansionTile(
                                 shape: const RoundedRectangleBorder(side: BorderSide.none),
-                                iconColor: Colors.black54, // Seta de expansão cinza
+                                iconColor: Colors.black54,
                                 collapsedIconColor: Colors.black54,
                                 leading: Padding(
                                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0, left: 4.0),
@@ -298,7 +295,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // --- O SEU GRID CLEAN COM TABELA PERMANECE INTACTO ---
                                         Table(
                                           border: TableBorder.symmetric(
                                             inside: BorderSide(color: Colors.grey.shade200, width: 1),
@@ -356,7 +352,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
 
                                         const SizedBox(height: 16),
                                         
-                                        // --- SEUS BOTÕES DE AÇÃO CLEAN PERMANECEM ---
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -394,11 +389,10 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
                         ),
                       ),
                       
-                    // --- PAGINAÇÃO CLEAN (Igual ao Print) ---
                     if (listaFiltrada.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0), // Mais espaço, sem borda superior forte
-                        color: Colors.transparent, // Fundo transparente
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        color: Colors.transparent,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -430,10 +424,6 @@ class _HistoricoPacienteScreenState extends State<HistoricoPacienteScreen> {
       ),
     );
   }
-
-  // ===========================================================================
-  // WIDGET CONSTRUTOR CLEAN
-  // ===========================================================================
 
   Widget _buildCleanInfoItem(IconData icon, String label, String value, {bool isFullWidth = false, bool isItalic = false}) {
     return Padding(

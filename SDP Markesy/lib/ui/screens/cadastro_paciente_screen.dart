@@ -5,7 +5,6 @@ import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/ui/screens/avaliacao_sucesso_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
 
-// --- FORMATADOR DE DATA AUTOMÁTICO ---
 class DataInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
@@ -151,7 +150,6 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                 children: [
                   Row(
                     children: [
-                      // --- BOTÃO DE VOLTAR COM HOVER QUADRADO ---
                       Material(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -222,7 +220,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                                   _buildLabel('Data de Nascimento', icon: Icons.cake_outlined),
                                   TextField(
                                     controller: _dataNascimentoController,
-                                    inputFormatters: [DataInputFormatter()], // MÁSCARA AUTOMÁTICA
+                                    inputFormatters: [DataInputFormatter()],
                                     keyboardType: TextInputType.number,
                                     decoration: _inputDecoration(hint: 'DD/MM/AAAA'),
                                   ),
@@ -242,7 +240,6 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        // --- CAMPO DATA AVALIAÇÃO INTERATIVO ---
                         _buildLabel('Data da Avaliação', icon: Icons.calendar_today),
                         GestureDetector(
                           onTap: () => _selecionarData(context),
