@@ -223,7 +223,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
             if (!_fechouPacote) ...[
               DropdownButtonFormField<String>(
-                value: _motivoSelecionado,
+                initialValue: _motivoSelecionado,
                 decoration: const InputDecoration(
                   labelText: 'Motivo por não ter fechado o pacote', 
                   border: OutlineInputBorder(),

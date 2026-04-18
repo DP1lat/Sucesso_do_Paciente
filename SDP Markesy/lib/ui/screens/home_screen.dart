@@ -134,10 +134,10 @@ class HomeScreen extends StatelessWidget {
               height: 280,
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
-                color: isHovered ? primaryBlue.withOpacity(0.06) : Colors.white, 
+                color: isHovered ? primaryBlue.withValues(alpha:0.06) : Colors.white, 
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isHovered ? primaryBlue.withOpacity(0.3) : Colors.grey.shade300, 
+                  color: isHovered ? primaryBlue.withValues(alpha:0.3) : Colors.grey.shade300, 
                   width: 1.5
                 ),
               ),
@@ -151,7 +151,7 @@ class HomeScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isHighlighted ? primaryBlue : primaryBlue.withOpacity(0.1),
+                          color: isHighlighted ? primaryBlue : primaryBlue.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(icon, color: isHighlighted ? Colors.white : primaryBlue, size: 32),

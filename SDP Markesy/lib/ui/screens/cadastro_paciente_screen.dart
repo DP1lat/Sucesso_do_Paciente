@@ -185,7 +185,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5))]
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15, offset: const Offset(0, 5))]
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +194,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(color: primaryBlue.withValues(alpha:0.1), borderRadius: BorderRadius.circular(12)),
                               child: Icon(Icons.person, color: primaryBlue, size: 20),
                             ),
                             const SizedBox(width: 16),
