@@ -127,53 +127,60 @@ class HomeScreen extends StatelessWidget {
           onExit: (_) => setState(() => isHovered = false), 
           child: GestureDetector(
             onTap: onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              width: 280,
-              height: 280,
-              padding: const EdgeInsets.all(28),
+            child: Container(
               decoration: BoxDecoration(
-                color: isHovered ? primaryBlue.withValues(alpha:0.06) : Colors.white, 
+                color: Colors.white, 
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isHovered ? primaryBlue.withValues(alpha:0.3) : Colors.grey.shade300, 
-                  width: 1.5
-                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isHighlighted ? primaryBlue : primaryBlue.withValues(alpha:0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(icon, color: isHighlighted ? Colors.white : primaryBlue, size: 32),
-                      ),
-                      AnimatedPadding(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.only(right: isHovered ? 0 : 4),
-                        child: Icon(
-                          Icons.arrow_forward, 
-                          color: isHovered ? primaryBlue : Colors.grey.shade400, 
-                          size: 20
-                        ),
-                      ),
-                    ],
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250), 
+                curve: Curves.easeOut, 
+                width: 280,
+                height: 280,
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: isHovered ? primaryBlue.withValues(alpha: 0.06) : primaryBlue.withValues(alpha: 0.0), 
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isHovered ? primaryBlue.withValues(alpha: 0.3) : Colors.grey.shade300, 
+                    width: 1.5
                   ),
-                  
-                  const Spacer(),
-                  
-                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87, height: 1.3)),
-                  const SizedBox(height: 12),
-                  Text(description, style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.4)),
-                ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isHighlighted ? primaryBlue : primaryBlue.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(icon, color: isHighlighted ? Colors.white : primaryBlue, size: 32),
+                        ),
+                        AnimatedPadding(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          padding: EdgeInsets.only(right: isHovered ? 0 : 4), 
+                          child: Icon(
+                            Icons.arrow_forward, 
+                            color: isHovered ? primaryBlue : Colors.grey.shade400, 
+                            size: 20
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const Spacer(),
+                    
+                    Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87, height: 1.3)),
+                    const SizedBox(height: 12),
+                    Text(description, style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.4)),
+                  ],
+                ),
               ),
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:sdp_markesy/main.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
+import 'package:sdp_markesy/utils/formatters.dart';
 
 class AvaliacaoSucessoScreen extends StatefulWidget {
   final int pacienteId;
@@ -14,24 +15,6 @@ class AvaliacaoSucessoScreen extends StatefulWidget {
 
   @override
   State<AvaliacaoSucessoScreen> createState() => _AvaliacaoSucessoScreenState();
-}
-
-class MoedaInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.selection.baseOffset == 0) return newValue;
-
-    String onlyDigits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    double value = double.parse(onlyDigits);
-
-    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: '');
-    String newText = formatter.format(value / 100).trim();
-
-    return newValue.copyWith(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
-    );
-  }
 }
 
 class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {

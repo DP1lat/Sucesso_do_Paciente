@@ -1,32 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sdp_markesy/data/database/db_helper.dart';
 import 'package:sdp_markesy/ui/screens/avaliacao_sucesso_screen.dart';
 import 'package:sdp_markesy/ui/screens/historico_paciente_screen.dart';
+import 'package:sdp_markesy/utils/formatters.dart';
 
-class DataInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.selection.baseOffset < oldValue.selection.baseOffset) {
-      return newValue;
-    }
-    var text = newValue.text.replaceAll('/', '');
-    if (text.length > 8) text = text.substring(0, 8);
-    
-    var formatted = '';
-    for (var i = 0; i < text.length; i++) {
-      formatted += text[i];
-      if ((i == 1 || i == 3) && i != text.length - 1) {
-        formatted += '/';
-      }
-    }
-    return newValue.copyWith(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
-}
+
 
 class CadastroPacienteScreen extends StatefulWidget {
   final Map<String, dynamic>? pacienteParaEditar;
@@ -43,13 +22,13 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   final _dataAvaliacaoController = TextEditingController();
   
   bool _isLoading = false;
-  DateTime _dataSelecionada = DateTime.now();
   final Color primaryBlue = const Color(0xFF2441DE);
 
   @override
   void initState() {
     super.initState();
-    _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(_dataSelecionada);
+    
+    _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
 
     if (widget.pacienteParaEditar != null) {
       _nomeController.text = widget.pacienteParaEditar!['nome'] ?? '';
@@ -58,8 +37,8 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
       
       if (widget.pacienteParaEditar!['data_avaliacao'] != null) {
         try {
-          _dataSelecionada = DateTime.parse(widget.pacienteParaEditar!['data_avaliacao']);
-          _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(_dataSelecionada);
+          DateTime dataBanco = DateTime.parse(widget.pacienteParaEditar!['data_avaliacao']);
+          _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(dataBanco);
         } catch (e) {
           _dataAvaliacaoController.text = widget.pacienteParaEditar!['data_avaliacao'];
         }
@@ -68,9 +47,17 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
   }
 
   Future<void> _selecionarData(BuildContext context) async {
+    DateTime dataInicial = DateTime.now();
+    try {
+      final partes = _dataAvaliacaoController.text.split('/');
+      if (partes.length == 3) {
+        dataInicial = DateTime(int.parse(partes[2]), int.parse(partes[1]), int.parse(partes[0]));
+      }
+    } catch (_) {}
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _dataSelecionada,
+      initialDate: dataInicial,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
       builder: (context, child) {
@@ -82,9 +69,8 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
         );
       },
     );
-    if (picked != null && picked != _dataSelecionada) {
+    if (picked != null) {
       setState(() {
-        _dataSelecionada = picked;
         _dataAvaliacaoController.text = DateFormat('dd/MM/yyyy').format(picked);
       });
     }
@@ -105,11 +91,21 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
       return;
     }
     setState(() => _isLoading = true);
+
+    String dataAvaliacaoBanco = DateTime.now().toIso8601String();
+    try {
+      final partes = _dataAvaliacaoController.text.split('/');
+      if (partes.length == 3) {
+        dataAvaliacaoBanco = DateTime(int.parse(partes[2]), int.parse(partes[1]), int.parse(partes[0])).toIso8601String();
+      }
+    } catch (e) {
+    }
+
     final dadosPaciente = {
       'nome': _nomeController.text.trim(),
       'telefone': _telefoneController.text.trim(),
       'data_nascimento': _dataNascimentoController.text.trim(),
-      'data_avaliacao': _dataSelecionada.toIso8601String(), 
+      'data_avaliacao': dataAvaliacaoBanco, 
     };
 
     int pacienteId;
@@ -185,7 +181,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15, offset: const Offset(0, 5))]
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5))]
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +190,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: primaryBlue.withValues(alpha:0.1), borderRadius: BorderRadius.circular(12)),
+                              decoration: BoxDecoration(color: primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                               child: Icon(Icons.person, color: primaryBlue, size: 20),
                             ),
                             const SizedBox(width: 16),
@@ -209,7 +205,7 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                         ),
                         const SizedBox(height: 32),
                         _buildLabel('Nome Completo'),
-                        TextField(controller: _nomeController, decoration: _inputDecoration(hint: 'Ex.: Maria da Silva')),
+                        TextField(controller: _nomeController, decoration: _inputDecoration(hint: 'Ex.: Maria da Silva').copyWith(hintStyle: const TextStyle(color: Colors.grey))),
                         const SizedBox(height: 20),
                         Row(
                           children: [
@@ -220,9 +216,9 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                                   _buildLabel('Data de Nascimento', icon: Icons.cake_outlined),
                                   TextField(
                                     controller: _dataNascimentoController,
-                                    inputFormatters: [DataInputFormatter()],
+                                    inputFormatters: [DataInputFormatter()], 
                                     keyboardType: TextInputType.number,
-                                    decoration: _inputDecoration(hint: 'DD/MM/AAAA'),
+                                    decoration: _inputDecoration(hint: 'DD/MM/AAAA').copyWith(hintStyle: const TextStyle(color: Colors.grey)),
                                   ),
                                 ],
                               ),
@@ -233,22 +229,30 @@ class _CadastroPacienteScreenState extends State<CadastroPacienteScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildLabel('Telefone / WhatsApp', icon: Icons.phone_outlined),
-                                  TextField(controller: _telefoneController, decoration: _inputDecoration(hint: '(11) 90000-0000'), keyboardType: TextInputType.phone),
+                                  TextField(
+                                    controller: _telefoneController,
+                                    inputFormatters: [TelefoneInputFormatter()],
+                                    decoration: _inputDecoration(hint: '(11) 90000-0000').copyWith(hintStyle: const TextStyle(color: Colors.grey)), 
+                                    keyboardType: TextInputType.phone
+                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 24),
+
                         _buildLabel('Data da Avaliação', icon: Icons.calendar_today),
-                        GestureDetector(
-                          onTap: () => _selecionarData(context),
-                          child: AbsorbPointer(
-                            child: TextField(
-                              controller: _dataAvaliacaoController,
-                              decoration: _inputDecoration(hint: 'Selecionar data').copyWith(
-                                suffixIcon: Icon(Icons.edit_calendar, color: primaryBlue, size: 20),
-                              ),
+                        TextField(
+                          controller: _dataAvaliacaoController,
+                          inputFormatters: [DataInputFormatter()],
+                          keyboardType: TextInputType.number,
+                          decoration: _inputDecoration(hint: 'DD/MM/AAAA').copyWith(
+                            hintStyle: const TextStyle(color: Colors.grey),
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.edit_calendar, color: primaryBlue, size: 20),
+                              tooltip: 'Abrir Calendário',
+                              onPressed: () => _selecionarData(context),
                             ),
                           ),
                         ),
