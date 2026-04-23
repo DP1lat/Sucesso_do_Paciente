@@ -19,7 +19,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
+  
   bool _isLoading = false;
+  bool _lembrarMe = false;
+  bool _ocultarSenha = true;
 
   void _tentarLogin() async {
     String loginDigitado = _userController.text.trim();
@@ -61,60 +64,169 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const Color bgColor = Color(0xFF2140e1);
+    const Color buttonColor = Color(0xFFB3C2F2); 
+    const Color borderColor = Colors.white30; 
+
     return Scaffold(
-      backgroundColor: const Color(0xFF2140e1),
+      backgroundColor: bgColor,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/images/markesy-logo.png',
-                height: 120,
-              ),
-              const SizedBox(height: 20),
-              const Text('Sucesso do Paciente', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 40),
-              TextField(
-                controller: _userController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Usuário', 
-                  labelStyle: TextStyle(color: Colors.white70), 
-                  prefixIcon: Icon(Icons.person, color: Colors.white),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400), 
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Image.asset(
+                    'assets/images/markesy-logo.png',
+                    height: 120,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passController,
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Senha',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.lock, color: Colors.white),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white54)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                const SizedBox(height: 12),
+                const Center(
+                  child: Text(
+                    'Sucesso do Paciente', 
+                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w400)
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _tentarLogin,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(200, 50),
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2140e1),
+                
+                const SizedBox(height: 48),
+
+                _buildLabelRow(Icons.person_outline, 'Usuário'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _userController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _buildInputDecoration(hint: 'seu.usuario', borderColor: borderColor),
+                ),
+
+                const SizedBox(height: 24),
+
+                _buildLabelRow(Icons.lock_outline, 'Senha'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _passController,
+                  obscureText: _ocultarSenha,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _buildInputDecoration(hint: '••••••••', borderColor: borderColor).copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _ocultarSenha ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        color: Colors.white70,
+                        size: 20,
                       ),
-                      child: const Text('ENTRAR'),
+                      onPressed: () {
+                        setState(() {
+                          _ocultarSenha = !_ocultarSenha;
+                        });
+                      },
                     ),
-            ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Checkbox(
+                            value: _lembrarMe,
+                            onChanged: (val) => setState(() => _lembrarMe = val ?? false),
+                            side: const BorderSide(color: Colors.white, width: 1.5),
+                            activeColor: Colors.white,
+                            checkColor: bgColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Lembrar-me', style: TextStyle(color: Colors.white, fontSize: 14)),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () {
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Esqueci a senha', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 32),
+
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    : SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _tentarLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            foregroundColor: bgColor,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Entrar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+
+  Widget _buildLabelRow(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white, size: 18),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration({required String hint, required Color borderColor}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
+      filled: true,
+      fillColor: Colors.transparent,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), 
+        borderSide: BorderSide(color: borderColor)
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), 
+        borderSide: BorderSide(color: borderColor)
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12), 
+        borderSide: const BorderSide(color: Colors.white, width: 1.5)
       ),
     );
   }

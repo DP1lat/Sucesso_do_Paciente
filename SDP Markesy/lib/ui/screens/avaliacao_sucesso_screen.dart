@@ -23,14 +23,16 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
   String? _numSessoes = '1';
   final _valorController = TextEditingController(text: '0,00');
   final _profissionalController = TextEditingController();
-  String? _tipoPagamento;
+  
+  String? _tipoPagamento = 'Dinheiro'; 
   String? _parcelas = '1';
+  
   String? _origem;
   String? _motivoNaoFechamento;
   final _observacoesController = TextEditingController();
 
-  final List<String> _especialidades = ['Fisioterapia', 'Pilates', 'RPG', 'Acupuntura', 'Osteopatia', 'Outro'];
-  final List<String> _tiposPagamento = ['Dinheiro', 'Pix', 'Crédito', 'Débito', 'Boleto'];
+  final List<String> _especialidades = ['Fisioterapia', 'RPG', 'Osteopatia', 'Nutrição', 'Psicologia'];
+  final List<String> _tiposPagamento = ['Dinheiro', 'Pix', 'Crédito', 'Débito'];
   final List<String> _origens = ['Instagram', 'Indicação', 'Google', 'Fachada', 'Facebook', 'Outro'];
   final List<String> _motivos = ['Preço', 'Distância', 'Horário incompatível', 'Apenas pesquisa', 'Não gostou do método', 'Outro'];
 
@@ -41,7 +43,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
       _fechouPacote = widget.dadosAntigos!['fechou_pacote'] == 1;
       _especialidade = widget.dadosAntigos!['especialidade'];
       _profissionalController.text = widget.dadosAntigos!['profissional'] ?? '';
-      _tipoPagamento = widget.dadosAntigos!['tipo_pagamento'];
+      _tipoPagamento = widget.dadosAntigos!['tipo_pagamento'] ?? 'Dinheiro';
       _parcelas = widget.dadosAntigos!['num_parcelas']?.toString() ?? '1';
       _origem = widget.dadosAntigos!['origem'];
       _motivoNaoFechamento = widget.dadosAntigos!['motivo_nao_fechamento'];
@@ -103,6 +105,8 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isCredito = _tipoPagamento == 'Crédito';
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
@@ -117,7 +121,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // --- TOP BAR ---
                         Row(
                           children: [
                             Material(
@@ -151,7 +154,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                         
                         const SizedBox(height: 32),
 
-                        // --- CARD 1: TOGGLE DE FECHAMENTO ---
                         _buildSectionCard(
                           icon: Icons.check_circle_outline,
                           iconColor: _fechouPacote ? Colors.green : primaryBlue,
@@ -190,7 +192,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
                         const SizedBox(height: 24),
 
-                        // --- CARD 2: DADOS DO ATENDIMENTO ---
                         _buildSectionCard(
                           icon: Icons.wallet_outlined,
                           iconColor: primaryBlue,
@@ -199,7 +200,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                           content: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Linha 1 (Muda dependendo se fechou)
                               Row(
                                 children: [
                                   Expanded(
@@ -208,14 +208,13 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                                   const SizedBox(width: 20),
                                   Expanded(
                                     child: _fechouPacote 
-                                      ? _buildDropdownField('Nº de sessões', Icons.layers_outlined, List.generate(20, (i) => (i + 1).toString()), _numSessoes, (val) => setState(() => _numSessoes = val), suffix: 'sessão(ões)')
+                                      ? _buildDropdownField('Nº de sessões', Icons.layers_outlined, List.generate(10, (i) => (i + 1).toString()), _numSessoes, (val) => setState(() => _numSessoes = val), suffix: 'sessão(ões)')
                                       : _buildTextField('Valor da Avaliação (R\$)', Icons.payments_outlined, _valorController, hint: '0,00', isCurrency: true),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 20),
                               
-                              // Se fechou, o valor do pacote aparece aqui sozinho
                               if (_fechouPacote) ...[
                                 Row(
                                   children: [
@@ -223,25 +222,44 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                                       child: _buildTextField('Valor do Pacote (R\$)', Icons.account_balance_wallet_outlined, _valorController, hint: '0,00', isCurrency: true),
                                     ),
                                     const SizedBox(width: 20),
-                                    const Expanded(child: SizedBox()), // Espaço vazio para manter o layout como no print
+                                    const Expanded(child: SizedBox()), 
                                   ],
                                 ),
                                 const SizedBox(height: 20),
                               ],
 
-                              // Profissional
                               _buildTextField('Nome do Profissional', Icons.person_outline, _profissionalController, hint: 'Ex.: Aline'),
                               const SizedBox(height: 20),
 
-                              // Linha Pagamento
                               Row(
                                 children: [
                                   Expanded(
-                                    child: _buildDropdownField('Tipo de Pagamento', Icons.credit_card_outlined, _tiposPagamento, _tipoPagamento, (val) => setState(() => _tipoPagamento = val)),
+                                    child: _buildDropdownField(
+                                      'Tipo de Pagamento', 
+                                      Icons.credit_card_outlined, 
+                                      _tiposPagamento, 
+                                      _tipoPagamento, 
+                                      (val) {
+                                        setState(() {
+                                          _tipoPagamento = val;
+                                          if (val != 'Crédito') {
+                                            _parcelas = '1';
+                                          }
+                                        });
+                                      }
+                                    ),
                                   ),
                                   const SizedBox(width: 20),
                                   Expanded(
-                                    child: _buildDropdownField('Quantidade de parcelas', Icons.view_week_outlined, List.generate(12, (i) => (i + 1).toString()), _parcelas, (val) => setState(() => _parcelas = val), suffix: 'x'),
+                                    child: _buildDropdownField(
+                                      'Quantidade de parcelas', 
+                                      Icons.view_week_outlined, 
+                                      List.generate(12, (i) => (i + 1).toString()), 
+                                      _parcelas, 
+                                      (val) => setState(() => _parcelas = val), 
+                                      suffix: 'x',
+                                      isEnabled: isCredito, 
+                                    ),
                                   ),
                                 ],
                               ),
@@ -251,7 +269,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
 
                         const SizedBox(height: 24),
 
-                        // --- CARD 3: INFORMAÇÕES COMPLEMENTARES ---
                         _buildSectionCard(
                           icon: Icons.explore_outlined,
                           iconColor: primaryBlue,
@@ -284,7 +301,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
               ),
             ),
             
-            // --- BOTTOM BAR FIXA ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               decoration: BoxDecoration(
@@ -309,7 +325,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _finalizarCadastro,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade400, // Tom de azul um pouco mais claro como no print
+                              backgroundColor: Colors.blue.shade400,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -337,10 +353,6 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
       ),
     );
   }
-
-  // ===========================================================================
-  // WIDGETS AUXILIARES
-  // ===========================================================================
 
   Widget _buildSectionCard({required IconData icon, required Color iconColor, required String title, required String subtitle, required Widget content}) {
     return Container(
@@ -416,7 +428,7 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
     );
   }
 
-  Widget _buildDropdownField(String label, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {String? suffix, String? hint, bool isRequired = false}) {
+  Widget _buildDropdownField(String label, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {String? suffix, String? hint, bool isRequired = false, bool isEnabled = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -424,28 +436,29 @@ class _AvaliacaoSucessoScreenState extends State<AvaliacaoSucessoScreen> {
         DropdownButtonFormField<String>(
           value: value,
           icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-          decoration: _inputDecoration(hint: hint),
+          decoration: _inputDecoration(hint: hint, isEnabled: isEnabled),
+          onChanged: isEnabled ? onChanged : null, 
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
               child: Text(suffix != null ? '$item $suffix' : item, style: const TextStyle(fontSize: 14)),
             );
           }).toList(),
-          onChanged: onChanged,
         ),
       ],
     );
   }
 
-  InputDecoration _inputDecoration({String? hint}) {
+  InputDecoration _inputDecoration({String? hint, bool isEnabled = true}) {
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: isEnabled ? Colors.white : Colors.grey.shade100,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+      disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade200)),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: primaryBlue, width: 1.5)),
     );
   }
