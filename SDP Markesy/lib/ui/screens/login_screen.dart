@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     const Color bgColor = Color(0xFF2140e1);
-    const Color buttonColor = Color(0xFFB3C2F2); 
+    const Color buttonColor = Color.fromARGB(255, 255, 255, 255); 
     const Color borderColor = Colors.white30; 
 
     return Scaffold(
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
       filled: true,
-      fillColor: Colors.transparent,
+      fillColor: const Color.fromARGB(58, 0, 0, 0),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12), 
